@@ -6,7 +6,7 @@ class Parameters:
   start_balance = 100 
 
   # Temporary
-  num_neighbours = 2
+  num_neighbours = 3
 
   # Latency parameters
   p_min = 0.01

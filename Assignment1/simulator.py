@@ -15,7 +15,7 @@ class Simulator:
   	a = {}
   	for i in xrange(len(self.nodes)):
   		neighbours = [self.nodes[j] for j in xrange(max(i-Parameters.num_neighbours,0), i)]
-  		neighbours = neighbours + [self.nodes[j] for j in xrange(i+1, min(i+Parameters.num_neighbours, Parameters.num_peers))]
+  		neighbours = neighbours + [self.nodes[j] for j in xrange(i+1, min(1+i+Parameters.num_neighbours, Parameters.num_peers))]
   		a["P" + str(i)] = neighbours
   	return a
 
