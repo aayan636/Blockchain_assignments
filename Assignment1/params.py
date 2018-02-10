@@ -2,7 +2,7 @@ class Parameters:
   """All the required parameters"""
   num_peers = 10    # total number of peers
   z = 0.5           # percent of slow nodes
-  txn_gen_mean = 5  # transaction generation time mean
+  txn_gen_mean = 1  # transaction generation time mean
   txn_gen_var = 5   # transaction generation time variance
   start_balance = 100 
 

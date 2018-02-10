@@ -1,5 +1,5 @@
 from params import Parameters
-from peer import *;
+from peer import Peer;
 
 class Simulator:
   """Simulator class"""
