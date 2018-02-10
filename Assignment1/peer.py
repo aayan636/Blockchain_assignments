@@ -1,38 +1,84 @@
-import threading
-import time
-#
-import numpy as np
-#
 from params import Parameters
+
+import threading
+import thread
+import time
+import numpy as np
+import Queue
+from collections import defaultdict
 
 class Peer (threading.Thread):
   """Peer class"""
-  # pid
-  # is_slow
-  # gen_transaction()
   
   def __init__(self, pid, is_slow):
     threading.Thread.__init__(self)
     self.pid = pid
     self.is_slow = is_slow
+    self.balance = Parameters.balance
+
+    self._semaphore = threading.Semaphore(0)
+    self._queue = Queue.Queue()
+    self._received_objs = defaultdict(set) # obj id to set of senders
+    self._connected_peers_ptrs = {}
+    self._connected_peers_speeds = {}
+
+  def add_connected_peer(self, peer_id, receiver_func_ptr, speed):
+    self._connected_peers_ptrs[peer_id] = receiver_func_ptr
+    self._connected_peers_speeds[peer_id] = speed
 
   def gen_transaction(self):
     while True:
       waiting_time = np.random.exponential(Parameters.transaction_generation_mean_time)
       time.sleep(waiting_time)
+      # TODO : Set proper transaction
+      # t = Transaction()
+      t = "lol" + str(self.pid)
+      msg = Message(t, self.pid, False)
+      self._queue.put(msg)
+      self._semaphore.release()
       print "Txn generated ", self.pid
+
+  def receive_message(self, message):
+    self._queue.put(message)
+    self._semaphore.release()
+
+  def get_delay(self, is_slow, is_block):
+    # TODO. based on slow, fast type of self, receiver & on message content type
+    return 5
+
+  def process_message(self, message):
+    # add to received objects
+    msg_set = self._received_objs[message.content.id]
+    msg_set.add(message.sender)
+
+    # send to connected peers, with conditions
+    print message
+    for p in self._connected_peers_ptrs:
+      if p not in msg_set:
+        # send to this!
+        p_recv_ptr = self._connected_peers_ptrs[p]
+        p_is_slow = self._connected_peers_speeds[p]
+        delay = self.get_delay(p_is_slow, message.is_block)
+        message.send(p_recv_ptr, delay)
 
   def run(self):
     print "Starting Peer ", self.pid
-    self.gen_transaction()
+    # thread.start_new_thread(self.gen_transaction, ())
     print "Exiting Peer ", self.pid
+    while True:
+      self.semaphore.acquire()
+      self.process_message(self.queue.get())
 
 
 # For testing
 if __name__ == '__main__':
   a = Peer(1, False)
   a.start()
-  b = Peer(2, False)
-  b.start()
-  c = Peer(3, False)
-  c.start()
+  a.receive_message("yo")
+  time.sleep(1)
+  a.receive_message("sup")
+  a.receive_message("lol")
+  # b = Peer(2, False)
+  # b.start()
+  # c = Peer(3, False)
+  # c.start()
