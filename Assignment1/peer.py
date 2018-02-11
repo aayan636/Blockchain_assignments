@@ -5,20 +5,18 @@ from message import Message
 import threading
 import thread
 import time
-import numpy as np
 import Queue
 from collections import defaultdict
 
 class Peer (threading.Thread):
   """Peer class"""
   
-  def __init__(self, pid, is_slow):
+  def __init__(self, pid, get_delay):
     threading.Thread.__init__(self)
     self.pid = pid
-    # TODO : Required is_slow?
-    self.is_slow = is_slow
     self.balance = Parameters.start_balance
 
+    self._get_delay = get_delay
     self._semaphore = threading.Semaphore(0)
     self._queue = Queue.Queue()
     self._received_objs = defaultdict(set) # obj id to set of senders
@@ -34,7 +32,7 @@ class Peer (threading.Thread):
     if self.pid == "P0":
       while i<1:
         i+=1
-        waiting_time = np.random.exponential(Parameters.txn_gen_mean)
+        waiting_time = random.expovariate(1.0 / Parameters.txn_gen_mean)
         time.sleep(waiting_time)
         # TODO : Set proper transaction
         t = Transaction(1,1,0)
@@ -48,14 +46,11 @@ class Peer (threading.Thread):
     self._queue.put(message)
     self._semaphore.release()
 
-  def get_delay(self, is_slow, is_block):
-    # TODO. based on slow, fast type of self, receiver & on message content type
-    return 5
-
   def process_message(self, message):
     # add to received objects
     msg_set = self._received_objs[message.content.id]
-    msg_set.add(message.sender)                       # IS THIS A GOOD IDEA ? (JUST ONE MESSAGE OBJECT)
+    msg_set.add(message.sender)
+    new_message = Message(message.content, self.pid, message.is_block)
 
     print "Transaction processed", message.content.id, " by peer ", self.pid, " sent by ", message.sender
 
@@ -64,11 +59,8 @@ class Peer (threading.Thread):
       if p not in msg_set:
         # send to this!
         p_recv_ptr = self._connected_peers_ptrs[p]
-        p_is_slow = self.is_slow and self._connected_peers[p].is_slow
-        delay = self.get_delay(p_is_slow, message.is_block)
-        new_message = Message(message.content, self.pid, False)
+        delay = self._get_delay(self.pid, p, message.is_block)
         new_message.send(p_recv_ptr, delay)
-        #message.send(p_recv_ptr, delay)
 
   def run(self):
     print "Starting Peer ", self.pid

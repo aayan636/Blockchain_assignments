@@ -14,7 +14,7 @@ class Parameters:
   # Latency parameters
   p_min = 0.01
   p_max = 0.50
-  m = 8 * (10**6)
-  c_high = 100 * (10**6)
-  c_low = 5 * (10**6)
-  d = 96 * (10**3)
+  m = 8.0 * (10**6)
+  c_high = 100.0 * (10**6)
+  c_low = 5.0 * (10**6)
+  d = 96.0 * (10**3)
