@@ -28,7 +28,7 @@ class Simulator:
   	for i in xrange(len(self.nodes)):
   		cur_neighbours = self.network_graph["P" + str(i)]
   		for j in cur_neighbours:
-  			self.nodes[i].add_connected_peer(j.pid, j, j.receive_message)
+  			self.nodes[i].add_connected_peer(j.pid, j.receive_message)
 
   def start_peers(self):
   	for i in self.nodes:
@@ -42,7 +42,7 @@ class Simulator:
   			print j.pid, 
   		print "\n"
 
-  def get_delay(pid1, pid2, is_block):
+  def get_delay(self, pid1, pid2, is_block):
     is_slow = self.node_is_slow[pid1] or self.node_is_slow[pid2]
     p = random.uniform(Parameters.p_min, Parameters.p_max)
     c = Parameters.c_low if is_slow else Parameters.c_high
@@ -52,6 +52,6 @@ class Simulator:
 
 # For testing
 if __name__ == '__main__':
-  s = Simulator("blah")
+  s = Simulator()
   s.print_network_graph()
   s.start_peers()
