@@ -1,8 +1,8 @@
 class Parameters:
   """All the required parameters"""
-  
-  num_peers = 6    # total number of peers
-  z = 0.5           # percent of slow nodes
+  num_peers = 3    # total number of peers
+  z = 1.5           # fraction of slow nodes
+
   txn_gen_mean = 1  # transaction generation time mean
   start_balance = 100 
 
@@ -10,7 +10,7 @@ class Parameters:
   block_gen_mean = 1 # Tk mean
   
   # Temporary
-  num_neighbours = 3
+  num_neighbours = 2
 
   # Latency parameters
   p_min = 0.01

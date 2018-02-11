@@ -5,6 +5,7 @@ from message import Message
 import threading
 import thread
 import time
+import random
 import Queue
 from collections import defaultdict
 
@@ -19,13 +20,11 @@ class Peer (threading.Thread):
     self._get_delay = get_delay
     self._semaphore = threading.Semaphore(0)
     self._queue = Queue.Queue()
-    self._received_objs = defaultdict(set) # obj id to set of senders
+    self._recvd_or_sent = defaultdict(set) # obj id to set of senders
     self._connected_peers_ptrs = {}
-    self._connected_peers = {}
     
-  def add_connected_peer(self, peer_id, peer_obj, receiver_func_ptr):
+  def add_connected_peer(self, peer_id, receiver_func_ptr):
     self._connected_peers_ptrs[peer_id] = receiver_func_ptr
-    self._connected_peers[peer_id] = peer_obj
     
   def gen_transaction(self):
     i=0
@@ -42,13 +41,12 @@ class Peer (threading.Thread):
         print "Transaction generated ", t.id, " by peer ", self.pid
 
   def receive_message(self, message):
-    # TODO : Add received message to _received_objs
     self._queue.put(message)
     self._semaphore.release()
 
   def process_message(self, message):
     # add to received objects
-    msg_set = self._received_objs[message.content.id]
+    msg_set = self._recvd_or_sent[message.content.id]
     msg_set.add(message.sender)
     new_message = Message(message.content, self.pid, message.is_block)
 
@@ -58,6 +56,7 @@ class Peer (threading.Thread):
     for p in self._connected_peers_ptrs:
       if p not in msg_set:
         # send to this!
+        msg_set.add(p)
         p_recv_ptr = self._connected_peers_ptrs[p]
         delay = self._get_delay(self.pid, p, message.is_block)
         new_message.send(p_recv_ptr, delay)
@@ -68,7 +67,6 @@ class Peer (threading.Thread):
     while True:
       self._semaphore.acquire()
       self.process_message(self._queue.get())
-      print "QSIZE:", self._queue.qsize()
 
 # For testing
 if __name__ == '__main__':
