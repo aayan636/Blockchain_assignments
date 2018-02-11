@@ -4,7 +4,7 @@ class Block:
 	def __init__(self, previous_blk_id, previous_blk_len):
 		Block.id += 1
 		self.id = "B_" + str(Block.id)
-    self.previous_blk_id = previous_blk_id
+    self.previous = previous_blk_id
     self.length = previous_blk_len + 1
     self.transactions = {}
 
