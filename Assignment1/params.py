@@ -5,6 +5,9 @@ class Parameters:
   txn_gen_mean = 1  # transaction generation time mean
   start_balance = 100 
 
+  # Block generation prams :
+  block_gen_mean = 1 # Tk mean
+  
   # Temporary
   num_neighbours = 3
 

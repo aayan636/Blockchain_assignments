@@ -1,7 +1,6 @@
 import time
 import thread
 
-
 class Message:
   def __init__(self, content, sender, is_block):
     self.content = content
