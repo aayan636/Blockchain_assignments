@@ -6,15 +6,10 @@ class BlockChain:
 	""" Defines a chain of blocks """
 	
   def __init__(self, gen_block):
-		init_balance = dict()
-    for i in range(Parameters.num_peers):
-      pid = "P_" + str(i)
-      init_balance[pid] = Parameters.start_balance
-
     self._all_blocks = {gen_block.id : gen_block}
-    self._all_leaves = {gen_block.id : gen_block}
+    self._all_leaves = set() # set of all block ids.
+    self._all_leaves.add(gen_block.id)
     self._current_chain_last_block = gen_block.id
-    self._balances = {gen_block.id : deepcopy(init_balance)}
     
     self._current_transactions = dict()
 
@@ -30,35 +25,56 @@ class BlockChain:
 
   def add_block(self, block):
     # check if prev blk of block is main chain or not
-    if block.previous in self._all_blocks:
-      (is_valid, new_balances) = self.update_balance(self._balances[block.previous], block)
-      if not is_valid:
-        print "Block not valid"
-        return False
-      self._all_blocks[block.id] = block
-      # update leaves :
-      del self._all_leaves[block.previous]
-      self._all_leaves[block.id] = block
-      # update balances :
-      del self._balances[block.previous]
-      self._balances[block.id] = new_balances
-      # update main chain:
-      if block.length > self._current_chain_last_block.length:
-        self._current_chain_last_block = block
-        self._current_balance = deepcopy(new_balances)
-        self._current_transactions = ??
-    else:
+    if block.previous not in self._all_blocks:
       print "Error : received ablock whose previous is not available in this peer."
       return False
+
+    self._all_blocks[block.id] = block
+    # update leaves :
+    if block.previous in self._all_leaves:
+      self._all_leaves.remove(block.previous)
+    self._all_leaves.add(block.id)
+
+    # update main chain:
+    if block.length > self._all_blocks[self._current_chain_last_block].length:
+      self._current_chain_last_block = block.id
+
+    return True
 
   def add_transaction(self, t):
     if t.id in self._current_transactions:
       return False
     self._current_transactions[t.id] = t
+    return True
 
   def generate_block(self):
-    curr_balance = deepcopy(self._balances[self._current_chain_last_block])
-    pass
+    prev_block = self._all_blocks[self._current_chain_last_block]
+    prev_all_txns = prev_block.all_transactions
+    prev_balances = prev_block.balances
+
+    new_all_txns = deepcopy(prev_all_txns)
+    new_txns = dict()
+    new_balances = deepcopy(prev_balances)
+    for txn in self._current_transactions.values():
+      if txn.id in prev_all_txns:
+        continue
+      if new_balances[txn.id_x] < txn.amount:
+        continue
+      new_balances[txn.id_x] -= txn.amount
+      new_balances[txn.id_y] += txn.amount
+      new_all_txns[txn.id] = txn
+      new_txns[txn.id] = txn
+
+    self._current_transactions.clear()
+    new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns)
+
+    self._all_blocks[new_block.id] = new_block
+
+    self._all_leaves.remove(self._current_chain_last_block)
+    self._all_leaves.add(new_block.id)
+    
+    self._current_chain_last_block = new_block.id
+    return new_block
 
 # for testing
 if __name__ == '__main__':

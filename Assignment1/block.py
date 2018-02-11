@@ -1,7 +1,7 @@
 class Block:
 """ Details of a block, stores a dictionary of all txns """
 	id = 0
-	def __init__(self, previous_blk_id, previous_blk_len):
+	def __init__(self, previous_blk_id, previous_blk_len, ):
     init_balance = dict()
     for i in range(Parameters.num_peers):
       pid = "P_" + str(i)
@@ -11,7 +11,8 @@ class Block:
     self.previous = previous_blk_id
     self.length = previous_blk_len + 1
     self.transactions = dict()    
-    self.balances = (init_balance)
+    self.balances = init_balance
+    self.all_transactions = dict()
 
   def add_transaction(self, t):
     if t.id not in self.transactions:
