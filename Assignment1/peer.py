@@ -51,7 +51,7 @@ class Peer (threading.Thread):
     new_message = Message(message.content, self.pid, message.is_block)
 
     print "Transaction processed", message.content.id, " by peer ", self.pid, " sent by ", message.sender
-
+    # TODO : call add_block if its a block.
     # send to connected peers, with conditions
     for p in self._connected_peers_ptrs:
       if p not in msg_set:
