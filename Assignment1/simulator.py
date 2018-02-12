@@ -4,7 +4,7 @@ from block import Block
 
 import random, threading, time
 
-from ete2 import Tree, NodeStyle, TreeStyle
+from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 
 class Simulator:
   """Simulator class"""
@@ -31,6 +31,11 @@ class Simulator:
     self.nst[2]["bgcolor"] = "DarkSeaGreen"
     self.ts = TreeStyle()
     # self.ts.mode = "c" #circle
+    self.ts.show_leaf_name = False
+    def my_layout(node):
+      F = TextFace(node.name, tight_text=True)
+      add_face_to_node(F, node, column=0, position="branch-right")
+    self.ts.layout_fn = my_layout
     # print "Testing nodes' get_delay ", self.nodes[0]._get_delay("P_0", "P_1", False)
 
   # change to make this customisable
