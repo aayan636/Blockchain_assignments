@@ -123,7 +123,7 @@ class BlockChain:
     new_balances[self._pid] += Parameters.block_generation_fee
 
     self._current_transactions.clear()
-    new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns)
+    new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns, self._pid)
     # this block will be added to the peer's block tree when its added to queue, and add_block is called by peer class.
     # self._all_blocks[new_block.id] = new_block
     # self._all_blocks_times[new_block.id] = time.time()

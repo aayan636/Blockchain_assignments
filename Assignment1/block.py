@@ -4,15 +4,16 @@ class Block:
   """ Details of a block, stores a dictionary of all txns """
   _id = 0
   _lock = threading.Lock()
-  def __init__(self, previous_blk_id, previous_blk_len, balances, transactions, all_transactions):
+  def __init__(self, previous_blk_id, previous_blk_len, balances, transactions, all_transactions, creator_pid):
     Block._lock.acquire()
     Block._id += 1
     self.id = "B_" + str(Block._id)
+    self.creator_pid = creator_pid
     Block._lock.release()
     self.previous = previous_blk_id
     self.length = previous_blk_len + 1
     self.balances = balances
-    self.transactions = transactions   
+    self.transactions = transactions
     self.all_transactions = all_transactions
 
 from copy import deepcopy

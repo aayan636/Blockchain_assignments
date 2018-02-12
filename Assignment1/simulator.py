@@ -12,7 +12,7 @@ class Simulator:
     for i in xrange(Parameters.num_peers):
       init_balances["P_" + str(i)] = Parameters.start_balance
 
-    self.gen_block = Block("B_-1", 0, init_balances, {}, {})
+    self.gen_block = Block("B_-1", 0, init_balances, {}, {}, "None")
     self.nodes = [Peer("P_" + str(i), self.get_delay, self.gen_block) for i in xrange(Parameters.num_peers)]
     self.node_is_slow = dict()
     self.network_graph = self.generate_graph()
