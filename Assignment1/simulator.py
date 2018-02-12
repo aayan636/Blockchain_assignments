@@ -27,12 +27,27 @@ class Simulator:
 
   # change to make this customisable
   def generate_graph(self):
-    a = {}
+    temp_graph = [[] for i in xrange(Parameters.num_peers)]
+    unconnected = set([i for i in xrange(Parameters.num_peers)])
+    while len(unconnected) > 1:
+    	node1 = random.sample(unconnected, 1)[0]
+    	unconnected.remove(node1)
+    	node2 = random.sample(unconnected, 1)[0]
+    	temp_graph[node2].append(self.nodes[node1])
+    	temp_graph[node1].append(self.nodes[node2])
+    unconnected = set([i for i in xrange(Parameters.num_peers)])
+    i = 0
+    for i in xrange(Parameters.num_peers*(Parameters.num_neighbours/2-1)):
+    	a = random.sample(unconnected, 1)[0]
+    	b = random.sample(unconnected, 1)[0]
+    	while b == a:
+    		b = random.sample(unconnected, 1)[0]
+    	temp_graph[a].append(self.nodes[b])
+    	temp_graph[b].append(self.nodes[a])
+    graph = {}
     for i in xrange(len(self.nodes)):
-      neighbours = [self.nodes[j] for j in xrange(max(i-Parameters.num_neighbours,0), i)]
-      neighbours = neighbours + [self.nodes[j] for j in xrange(i+1, min(1+i+Parameters.num_neighbours, Parameters.num_peers))]
-      a["P_" + str(i)] = neighbours
-    return a
+      graph["P_" + str(i)] = list(set(temp_graph[i]))
+    return graph
 
   def assign_neighbours(self):
     for i in xrange(len(self.nodes)):

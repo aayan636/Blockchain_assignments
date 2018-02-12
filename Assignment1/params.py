@@ -1,6 +1,6 @@
 class Parameters:
   """All the required parameters"""
-  num_peers = 3    # total number of peers
+  num_peers = 5    # total number of peers
   z = 1.5           # fraction of slow nodes
 
   block_generation_fee = 50

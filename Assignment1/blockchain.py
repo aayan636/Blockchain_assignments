@@ -8,9 +8,11 @@ from collections import defaultdict
 
 a = {}
 MAX = "END"
-a["P_0"] = '\033[94m'
-a["P_1"] = '\033[93m'
-a["P_2"] = '\033[92m'
+a["P_0"] = '\033[95m'
+a["P_1"] = '\033[94m'
+a["P_2"] = '\033[93m'
+a["P_3"] = '\033[92m'
+a["P_4"] = '\033[91m'
 a["END"] = '\033[0m'
 
 class BlockChain:
