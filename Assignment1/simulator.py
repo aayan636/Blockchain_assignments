@@ -4,6 +4,8 @@ from block import Block
 
 import random, threading, time
 
+from transaction import Transaction
+
 from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 
 class Simulator:
@@ -14,7 +16,7 @@ class Simulator:
     for i in xrange(Parameters.num_peers):
       init_balances["P_" + str(i)] = Parameters.start_balance
 
-    self.gen_block = Block("B_-1", 0, init_balances, {}, {})
+    self.gen_block = Block("B_-1", 0, init_balances, {}, {}, "")
     self.nodes = [Peer("P_" + str(i), self.get_delay, self.gen_block) for i in xrange(Parameters.num_peers)]
     self.node_is_slow = dict()
     self.network_graph = self.generate_graph()
@@ -25,10 +27,14 @@ class Simulator:
     # testing str of peers.
     t = threading.Timer(5, self.nodes[0].write_to_file) 
     t.start()
-    self.nst = [NodeStyle() for i in xrange(3)]
-    self.nst[0]["bgcolor"] = "LightSteelBlue"
-    self.nst[1]["bgcolor"] = "Moccasin"
-    self.nst[2]["bgcolor"] = "DarkSeaGreen"
+    self.nst = [NodeStyle() for i in xrange(Parameters.num_peers)]
+    self.fnst = [NodeStyle() for i in xrange(Parameters.num_peers)]
+    for i in xrange(Parameters.num_peers):
+      self.nst[i]["bgcolor"] = "#" + str(hex(random.randint(0,256**3-1)))[2:]
+    for i in xrange(Parameters.num_peers):
+      self.fnst[i]["size"] = 15
+      self.fnst[i]["fgcolor"] = self.nst[i]["bgcolor"]      
+
     self.ts = TreeStyle()
     # self.ts.mode = "c" #circle
     self.ts.show_leaf_name = False
@@ -97,7 +103,11 @@ class Simulator:
     t = Tree(allTrees, format = 1)
     for i in self.nodes:
       D = t.search_nodes(name = i.pid)[0]
-      D.set_style(self.nst[int(i.pid[2:])%3])
+      D.set_style(self.nst[int(i.pid[2:])])
+    for i in xrange(2,Block._id+1):
+      D = t.search_nodes(name = "B_" + str(i))
+      for d in D:
+        d.set_style(self.fnst[int(Block._made_by["B_"+str(i)][2:])])
     t.show(tree_style = self.ts)
 
 # For testing

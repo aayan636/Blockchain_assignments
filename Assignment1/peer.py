@@ -157,7 +157,7 @@ if __name__ == '__main__':
   init_balances = {}
   for i in xrange(Parameters.num_peers):
     init_balances["P_" + str(i)] = Parameters.start_balance
-  gen_block = Block(-1, 0, init_balances, {}, {})
+  gen_block = Block(-1, 0, init_balances, {}, {}, "")
 
   a = Peer("P_1", get_delay, gen_block)
   a.start()
