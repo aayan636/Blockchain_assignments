@@ -1,6 +1,6 @@
 class Parameters:
   """All the required parameters"""
-  num_peers = 2    # total number of peers
+  num_peers = 3    # total number of peers
   z = 1.5           # fraction of slow nodes
 
   block_generation_fee = 50
@@ -13,7 +13,7 @@ class Parameters:
   block_gen_mean = 15 # Tk mean
   
   # Temporary
-  num_neighbours = 1
+  num_neighbours = 2
 
   # Latency parameters
   p_min = 0.01
