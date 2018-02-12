@@ -8,7 +8,18 @@ import thread
 import threading
 import random
 import Queue
+
+#testing
+from block import Block
+
 from collections import defaultdict
+
+a = {}
+MAX = "END"
+a["P_0"] = '\033[94m'
+a["P_1"] = '\033[93m'
+a["END"] = '\033[0m'
+
 
 class Peer (threading.Thread):
   """Peer class"""
@@ -49,14 +60,15 @@ class Peer (threading.Thread):
         msg = Message(t, self.pid, False)
         self._queue.put(msg)
         self._semaphore.release()
-        print "Transaction generated ", t.id, " by peer ", self.pid, " amt : ", amt, ", sending to : ", receiver
+        #print "Transaction generated ", t.id, " by peer ", self.pid
 
   def _gen_block(self):
     block = self._blockchain.generate_block()
     msg = Message(block, self.pid, True)
     self._queue.put(msg)
     self._semaphore.release()
-    print "Block generated ", block.id, " by peer ", self.pid
+    print a[self.pid] + "Block generated ", block.id, " by peer ", self.pid, " having ", len(block.transactions), " txns" + a[MAX]
+    self.gen_block()
   
   def gen_block(self):
     waiting_time = random.expovariate(1.0 / (self._block_gen_mean)) # Tk
@@ -73,15 +85,16 @@ class Peer (threading.Thread):
     msg_set.add(message.sender)
     new_message = Message(message.content, self.pid, message.is_block)
 
-    print "Message id {} by peer {} sent by {} processed".format(message.content.id, self.pid, message.sender)
+    # print "Processing message id {} by peer {} sent by {}".format(message.content.id, self.pid, message.sender)
     
     if not message.is_block:
       self._blockchain.add_transaction(message.content)
     else:
       # ORDER : TODO
-      self._block_timer.cancel()
-      self.gen_block()
-      self._blockchain.add_block(message.content)
+      if self._blockchain.add_block(message.content):
+        self._block_timer.cancel()
+        self.gen_block()
+      self._blockchain.print_longest_chain()
 
     # send to connected peers, with conditions
     for p in self._connected_peers_ptrs:
@@ -102,6 +115,13 @@ class Peer (threading.Thread):
 
 # For testing
 if __name__ == '__main__':
-  a = Peer(1, False)
+  def get_delay():
+    return 5
+  init_balances = {}
+  for i in xrange(Parameters.num_peers):
+    init_balances["P_" + str(i)] = Parameters.start_balance
+  gen_block = Block(-1, 0, init_balances, {}, {})
+
+  a = Peer("P_1", get_delay, gen_block)
   a.start()
   time.sleep(100)

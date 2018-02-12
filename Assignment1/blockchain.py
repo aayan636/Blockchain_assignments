@@ -5,6 +5,12 @@ import threading
 import time
 from copy import deepcopy
 
+a = {}
+MAX = "END"
+a["P_0"] = '\033[94m'
+a["P_1"] = '\033[93m'
+a["END"] = '\033[0m'
+
 class BlockChain:
   """ Defines a chain of blocks """
   def __init__(self, gen_block, pid):
@@ -30,7 +36,7 @@ class BlockChain:
 
     # check if prev blk of block is main chain or not
     if block.previous not in self._all_blocks:
-      print "Error : Block id {} previous not in peer".format(block.id)
+      print a[self._pid] + "Error : Block id {} previous not in peer".format(block.id) + a[MAX]
       return False
 
     self._lock.acquire()
@@ -70,6 +76,17 @@ class BlockChain:
           continue
         curr_balance -= txn.amount
     return curr_balance
+
+  def print_longest_chain(self):
+    cur_block = self._current_chain_last_block
+    i = 0
+    txns = set()
+    while cur_block != "B_1":
+      txns |= set(self._all_blocks[cur_block].transactions.values())
+      print a[self._pid] + cur_block + " " + a[MAX],
+      cur_block = self._all_blocks[cur_block].previous
+      i+=1 
+    print a[self._pid] + " B_1 = " + str(len(txns)) + a[MAX]
 
   def generate_block(self):
     self._lock.acquire()
