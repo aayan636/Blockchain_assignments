@@ -1,11 +1,11 @@
 from params import Parameters
+from block import Block
 
 import threading
 from copy import deepcopy
 
 class BlockChain:
-	""" Defines a chain of blocks """
-	
+  """ Defines a chain of blocks """
   def __init__(self, gen_block):
     self._all_blocks = {gen_block.id : gen_block}
     self._all_leaves = set() # set of all block ids.

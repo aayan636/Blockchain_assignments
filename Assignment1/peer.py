@@ -36,11 +36,16 @@ class Peer (threading.Thread):
       waiting_time = random.expovariate(1.0 / Parameters.txn_gen_mean)
       time.sleep(waiting_time)
       # TODO : Set proper transaction
-      t = Transaction(1,1,0)
-      msg = Message(t, self.pid, False)
-      self._queue.put(msg)
-      self._semaphore.release()
-      print "Transaction generated ", t.id, " by peer ", self.pid
+      if Parameters.num_peers > 1:
+        # select random receiver :
+        self_id_int = int(self.pid[2:])
+        receiver = random.choice(range(0, self_id_int) + range(self_id_int+1, Parameters.num_peers))
+        # select random txn amt
+        t = Transaction(self.pid, "P_" + str(receiver),0)
+        msg = Message(t, self.pid, False)
+        self._queue.put(msg)
+        self._semaphore.release()
+        print "Transaction generated ", t.id, " by peer ", self.pid
 
   def _gen_block(self):
     block = self._blockchain.generate_block()
@@ -50,7 +55,7 @@ class Peer (threading.Thread):
     print "Block generated ", block.id, " by peer ", self.pid
   
   def gen_block(self):
-    waiting_time = random.expovariate(1.0 / Parameters.block_gen_mean)
+    waiting_time = random.expovariate(1.0 / Parameters.block_gen_mean) # Tk
     self._block_timer = threading.Timer(waiting_time, self._gen_block)
     self._block_timer.start()
 
@@ -69,9 +74,10 @@ class Peer (threading.Thread):
     if not message.is_block:
       self._blockchain.add_transaction(message.content)
     else:
-      self._blockchain.add_block(message.content)
+      # ORDER : TODO
       self._block_timer.cancel()
       self.gen_block()
+      self._blockchain.add_block(message.content)
 
     # send to connected peers, with conditions
     for p in self._connected_peers_ptrs:

@@ -1,5 +1,6 @@
 from params import Parameters
 from peer import Peer
+from block import Block
 
 import random
 
@@ -7,13 +8,20 @@ class Simulator:
   """Simulator class"""
   
   def __init__(self):
-    self.nodes = [Peer("P_" + str(i), self.get_delay) for i in xrange(Parameters.num_peers)]
+    init_balances = {}
+    for i in xrange(Parameters.num_peers):
+      init_balances["P_" + str(i)] = Parameters.start_balance
+
+    self.gen_block = Block(-1, 0, init_balances, {}, {})
+    self.nodes = [Peer("P_" + str(i), self.get_delay, self.gen_block) for i in xrange(Parameters.num_peers)]
     self.node_is_slow = dict()
     self.network_graph = self.generate_graph()
     self.assign_neighbours()
     for i in xrange(Parameters.num_peers):
       pid = "P_" + str(i)
       self.node_is_slow[pid] = (random.random() < Parameters.z)
+
+    # print "Testing nodes' get_delay ", self.nodes[0]._get_delay("P_0", "P_1", False)
 
   # change to make this customisable
   def generate_graph(self):
@@ -36,6 +44,7 @@ class Simulator:
 
   # debugging
   def print_network_graph(self):
+    print "Printing network graph : "
     for i in xrange(len(self.network_graph)):
       print i
       for j in self.network_graph["P_" + str(i)]:

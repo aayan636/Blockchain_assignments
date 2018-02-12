@@ -17,7 +17,7 @@ class Message:
     
     thread.start_new_thread(send_fn, ())
     # time.sleep(sleep_time)
-    print "exit fn"
+    # print "exit fn"
 
 if __name__ == '__main__':
   m1 = Message("yo", 1234)
