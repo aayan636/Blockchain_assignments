@@ -105,6 +105,13 @@ class Peer (threading.Thread):
         delay = self._get_delay(self.pid, p, message.is_block)
         new_message.send(p_recv_ptr, delay)
 
+  def write_to_file(self):
+    write_string = ""
+    write_string += "Peer ID : " + self.pid + "\n"
+    write_string += self._blockchain.write_to_file()
+    print write_string
+    return write_string
+
   def run(self):
     print "Starting Peer ", self.pid
     thread.start_new_thread(self.gen_transaction, ())

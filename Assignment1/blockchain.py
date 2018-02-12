@@ -4,6 +4,7 @@ from block import Block
 import threading
 import time
 from copy import deepcopy
+from collections import defaultdict
 
 a = {}
 MAX = "END"
@@ -16,7 +17,7 @@ class BlockChain:
   def __init__(self, gen_block, pid):
     self._pid = pid
     self._all_blocks = {gen_block.id : gen_block}
-    self._all_blocks_times = {gen_block.id : time.time}
+    self._all_blocks_times = {gen_block.id : time.time()}
     self._all_leaves = set() # set of all block ids.
     self._all_leaves.add(gen_block.id)
 
@@ -27,6 +28,9 @@ class BlockChain:
     self._current_transactions = dict()
     self._current_changes = 0
 
+    # Orphaned blocks previous index -> set of blocks
+    self._orphaned_blocks = defaultdict(set)
+
     self._lock = threading.Lock()
 
   def add_block(self, block):
@@ -36,8 +40,9 @@ class BlockChain:
 
     # check if prev blk of block is main chain or not
     if block.previous not in self._all_blocks:
-      print a[self._pid] + "Error : Block id {} previous not in peer".format(block.id) + a[MAX]
-      return False
+      self._orphaned_blocks[block.previous].add(block)
+      print "Semi Error : Block id {} previous not in peer".format(block.id)
+      return True
 
     self._lock.acquire()
     self._all_blocks[block.id] = block
@@ -50,6 +55,13 @@ class BlockChain:
     # update main chain:
     if block.length > self._all_blocks[self._current_chain_last_block].length:
       self._current_chain_last_block = block.id
+
+    for b in self._orphaned_blocks[block.id]:
+      self._lock.release()
+      self.add_block(b)
+      self._lock.acquire()
+
+    self._orphaned_blocks[block.id].clear()
 
     self._lock.release()
     return True
@@ -119,6 +131,12 @@ class BlockChain:
     # self._current_chain_last_block = new_block.id
     self._lock.release()
     return new_block
+
+  def write_to_file(self):
+    write_str = ""
+    for block_id in self._all_blocks.keys():
+      write_str += "Block id : " + block_id + ", Previous Ptr : " + self._all_blocks[block_id].previous + ", Time added to tree : " + str(self._all_blocks_times[block_id] - self._all_blocks_times["B_1"]) + "\n"
+    return write_str
 
 # for testing
 if __name__ == '__main__':

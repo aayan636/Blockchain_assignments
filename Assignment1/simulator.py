@@ -2,7 +2,7 @@ from params import Parameters
 from peer import Peer
 from block import Block
 
-import random
+import random, threading
 
 class Simulator:
   """Simulator class"""
@@ -12,7 +12,7 @@ class Simulator:
     for i in xrange(Parameters.num_peers):
       init_balances["P_" + str(i)] = Parameters.start_balance
 
-    self.gen_block = Block(-1, 0, init_balances, {}, {})
+    self.gen_block = Block("B_-1", 0, init_balances, {}, {})
     self.nodes = [Peer("P_" + str(i), self.get_delay, self.gen_block) for i in xrange(Parameters.num_peers)]
     self.node_is_slow = dict()
     self.network_graph = self.generate_graph()
@@ -20,7 +20,9 @@ class Simulator:
     for i in xrange(Parameters.num_peers):
       pid = "P_" + str(i)
       self.node_is_slow[pid] = (random.random() < Parameters.z)
-
+    # testing str of peers.
+    t = threading.Timer(5, self.nodes[0].write_to_file) 
+    t.start()
     # print "Testing nodes' get_delay ", self.nodes[0]._get_delay("P_0", "P_1", False)
 
   # change to make this customisable
