@@ -10,7 +10,7 @@ class BlockChain:
   def __init__(self, gen_block, pid):
     self._pid = pid
     self._all_blocks = {gen_block.id : gen_block}
-    self._all_blocks_times = {gen_block.id : time.time}
+    self._all_blocks_times = {gen_block.id : time.time()}
     self._all_leaves = set() # set of all block ids.
     self._all_leaves.add(gen_block.id)
 
@@ -102,6 +102,12 @@ class BlockChain:
     # self._current_chain_last_block = new_block.id
     self._lock.release()
     return new_block
+
+  def write_to_file(self):
+    write_str = ""
+    for block_id in self._all_blocks.keys():
+      write_str += "Block id : " + block_id + ", Previous Ptr : " + self._all_blocks[block_id].previous + ", Time added to tree : " + str(self._all_blocks_times[block_id] - self._all_blocks_times["B_1"]) + "\n"
+    return write_str
 
 # for testing
 if __name__ == '__main__':
