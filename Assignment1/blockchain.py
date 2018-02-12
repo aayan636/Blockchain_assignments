@@ -4,6 +4,7 @@ from block import Block
 import threading
 import time
 from copy import deepcopy
+from collections import defaultdict
 
 class BlockChain:
   """ Defines a chain of blocks """
@@ -21,6 +22,9 @@ class BlockChain:
     self._current_transactions = dict()
     self._current_changes = 0
 
+    # Orphaned blocks previous index -> set of blocks
+    self._orphaned_blocks = defaultdict(set)
+
     self._lock = threading.Lock()
 
   def add_block(self, block):
@@ -30,8 +34,9 @@ class BlockChain:
 
     # check if prev blk of block is main chain or not
     if block.previous not in self._all_blocks:
-      print "Error : Block id {} previous not in peer".format(block.id)
-      return False
+      self._orphaned_blocks[block.previous].add(block)
+      print "Semi Error : Block id {} previous not in peer".format(block.id)
+      return True
 
     self._lock.acquire()
     self._all_blocks[block.id] = block
@@ -44,6 +49,13 @@ class BlockChain:
     # update main chain:
     if block.length > self._all_blocks[self._current_chain_last_block].length:
       self._current_chain_last_block = block.id
+
+    for b in self._orphaned_blocks[block.id]:
+      self._lock.release()
+      self.add_block(b)
+      self._lock.acquire()
+
+    self._orphaned_blocks[block.id].clear()
 
     self._lock.release()
     return True
