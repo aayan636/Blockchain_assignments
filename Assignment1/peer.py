@@ -26,6 +26,8 @@ class Peer (threading.Thread):
     # Block
     self._blockchain = BlockChain(gen_block, self.pid)
     self._block_timer = None
+    # the random no denotes the computation power of the peer. lower the random no, higher the comp. power.
+    self._block_gen_mean = Parameters.block_gen_mean * (random.uniform(0.5, 1.0))
 
     
   def add_connected_peer(self, peer_id, receiver_func_ptr):
@@ -41,7 +43,8 @@ class Peer (threading.Thread):
         self_id_int = int(self.pid[2:])
         receiver = random.choice(range(0, self_id_int) + range(self_id_int+1, Parameters.num_peers))
         # select random txn amt
-        amt = random.randint(1, self._blockchain.get_current_balance())
+        curr_balance = self._blockchain.get_current_balance()
+        amt = random.randint(0, curr_balance)
         t = Transaction(self.pid, "P_" + str(receiver),amt)
         msg = Message(t, self.pid, False)
         self._queue.put(msg)
@@ -56,7 +59,7 @@ class Peer (threading.Thread):
     print "Block generated ", block.id, " by peer ", self.pid
   
   def gen_block(self):
-    waiting_time = random.expovariate(1.0 / Parameters.block_gen_mean) # Tk
+    waiting_time = random.expovariate(1.0 / (self._block_gen_mean)) # Tk
     self._block_timer = threading.Timer(waiting_time, self._gen_block)
     self._block_timer.start()
 

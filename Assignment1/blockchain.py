@@ -2,6 +2,7 @@ from params import Parameters
 from block import Block
 
 import threading
+import time
 from copy import deepcopy
 
 class BlockChain:
@@ -9,6 +10,7 @@ class BlockChain:
   def __init__(self, gen_block, pid):
     self._pid = pid
     self._all_blocks = {gen_block.id : gen_block}
+    self._all_blocks_times = {gen_block.id : time.time}
     self._all_leaves = set() # set of all block ids.
     self._all_leaves.add(gen_block.id)
 
@@ -33,6 +35,7 @@ class BlockChain:
 
     self._lock.acquire()
     self._all_blocks[block.id] = block
+    self._all_blocks_times[block.id] = time.time()
     # update leaves
     if block.previous in self._all_leaves:
       self._all_leaves.remove(block.previous)
@@ -91,11 +94,12 @@ class BlockChain:
 
     self._current_transactions.clear()
     new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns)
-
-    self._all_blocks[new_block.id] = new_block
-    self._all_leaves.remove(self._current_chain_last_block)
-    self._all_leaves.add(new_block.id)
-    self._current_chain_last_block = new_block.id
+    # this block will be added to the peer's block tree when its added to queue, and add_block is called by peer class.
+    # self._all_blocks[new_block.id] = new_block
+    # self._all_blocks_times[new_block.id] = time.time()
+    # self._all_leaves.remove(self._current_chain_last_block)
+    # self._all_leaves.add(new_block.id)
+    # self._current_chain_last_block = new_block.id
     self._lock.release()
     return new_block
 
