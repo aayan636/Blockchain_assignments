@@ -4,10 +4,11 @@ class Parameters:
   z = 1.5           # fraction of slow nodes
 
   txn_gen_mean = 1  # transaction generation time mean
-  start_balance = 100 
-  txn_per_block = 10
   
-  # Block generation prams :
+  start_balance = 100 
+  block_generation_fee = 50
+  
+  # Block generation params :
   block_gen_mean = 1 # Tk mean
   
   # Temporary

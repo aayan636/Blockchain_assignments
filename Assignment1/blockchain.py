@@ -6,12 +6,19 @@ from copy import deepcopy
 
 class BlockChain:
   """ Defines a chain of blocks """
-  def __init__(self, gen_block):
+  def __init__(self, gen_block, pid):
+    self._pid = pid
     self._all_blocks = {gen_block.id : gen_block}
     self._all_leaves = set() # set of all block ids.
     self._all_leaves.add(gen_block.id)
+
+    # peer's longest chain :
     self._current_chain_last_block = gen_block.id
+    
+    # current, local txns set
     self._current_transactions = dict()
+    self._current_changes = 0
+
     self._lock = threading.Lock()
 
   def add_block(self, block):
@@ -41,11 +48,25 @@ class BlockChain:
   def add_transaction(self, t):
     if t.id in self._current_transactions:
       return False
-    # TODO: Update self current balance
     self._lock.acquire()
     self._current_transactions[t.id] = t
     self._lock.release()
     return True
+
+  def get_current_balance(self):
+    # might be invalid due to no lock, but fine with generating invalid txns.
+    curr_block = self._all_blocks[self._current_chain_last_block]
+    # current block balance
+    curr_balance = curr_block.balances[self._pid]
+    # add all valid current txns
+    for txn in self._current_transactions.values():
+      if txn.id in curr_block.all_transactions:
+        continue
+      if txn.id_x == self._pid:
+        if curr_balance < txn.amount:
+          continue
+        curr_balance -= txn.amount
+    return curr_balance
 
   def generate_block(self):
     self._lock.acquire()
@@ -65,6 +86,8 @@ class BlockChain:
       new_balances[txn.id_y] += txn.amount
       new_all_txns[txn.id] = txn
       new_txns[txn.id] = txn
+
+    new_balances[self._pid] += Parameters.block_generation_fee
 
     self._current_transactions.clear()
     new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns)

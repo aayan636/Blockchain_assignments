@@ -24,7 +24,7 @@ class Peer (threading.Thread):
     self._recvd_or_sent = defaultdict(set) # obj id to set of senders
 
     # Block
-    self._blockchain = BlockChain(gen_block)
+    self._blockchain = BlockChain(gen_block, self.pid)
     self._block_timer = None
 
     
@@ -41,11 +41,12 @@ class Peer (threading.Thread):
         self_id_int = int(self.pid[2:])
         receiver = random.choice(range(0, self_id_int) + range(self_id_int+1, Parameters.num_peers))
         # select random txn amt
-        t = Transaction(self.pid, "P_" + str(receiver),0)
+        amt = random.randint(1, self._blockchain.get_current_balance())
+        t = Transaction(self.pid, "P_" + str(receiver),amt)
         msg = Message(t, self.pid, False)
         self._queue.put(msg)
         self._semaphore.release()
-        print "Transaction generated ", t.id, " by peer ", self.pid
+        print "Transaction generated ", t.id, " by peer ", self.pid, " amt : ", amt, ", sending to : ", receiver
 
   def _gen_block(self):
     block = self._blockchain.generate_block()
