@@ -7,14 +7,15 @@ import time
 import threading
 import random
 
+_ete2_import = True
+
 try:
   from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 except ImportError:
-  Simulator._ete2_import = False
+  _ete2_import = False
 
 class Simulator:
   """Simulator class"""
-  _ete2_import = True
   def __init__(self):
     init_balances = {}
     for i in xrange(Parameters.num_peers):
@@ -32,7 +33,7 @@ class Simulator:
     t = threading.Timer(5, self.nodes[0].write_to_file) 
     t.start()
     #for tree generation
-    if Simulator._ete2_import:
+    if _ete2_import:
       self.nst = [NodeStyle() for i in xrange(Parameters.num_peers)]
       self.fnst = [NodeStyle() for i in xrange(Parameters.num_peers)]
       for i in xrange(Parameters.num_peers):
@@ -101,7 +102,7 @@ class Simulator:
 
 
   def showtree(self):
-    if Simulator._ete2_import:
+    if _ete2_import:
       allTrees = ""
       for i in self.nodes:
         allTrees += (i.render() + ",")
@@ -133,6 +134,6 @@ if __name__ == '__main__':
   s.print_network_graph()
   s.start_peers()
   time.sleep(10)
-  if Simulator._ete2_import:
+  if _ete2_import:
     while True:
       s.showtree()
