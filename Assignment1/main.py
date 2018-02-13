@@ -21,6 +21,10 @@ def handler(signum, frame):
 		text_file.close()
 	print "SNAPSHOTTED COPY " + str(_copies_written)
 
-signal.signal(signal.SIGQUIT, handler)
 
-start_simulation()
+def main():
+	signal.signal(signal.SIGQUIT, handler)
+	start_simulation()
+
+if __name__ == '__main__':
+	main()
