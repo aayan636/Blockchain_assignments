@@ -12,7 +12,7 @@ from collections import defaultdict
 
 
 class Peer (threading.Thread):
-  """Peer class"""
+  """Peer class. A separate thread for a peer, which simulates all the functionalities of a peer. """
   
   def __init__(self, pid, get_delay, gen_block):
     threading.Thread.__init__(self)
@@ -33,12 +33,11 @@ class Peer (threading.Thread):
     
   def add_connected_peer(self, peer_id, receiver_func_ptr):
     self._connected_peers_ptrs[peer_id] = receiver_func_ptr
-    
 
   def gen_transaction(self):
     """
       Generates transactions after expovariant intervals
-      Spawned as a new thread
+      Spawned as a new thread, which keeps running in parallel.
     """
     while True:
       waiting_time = random.expovariate(1.0 / Parameters.txn_gen_mean)
@@ -46,7 +45,7 @@ class Peer (threading.Thread):
       time.sleep(waiting_time)
 
       # Sanity check
-      if Parameters.num_peers < 1:
+      if Parameters.num_peers <= 1:
         print "Too few peers"
         continue
       
@@ -60,12 +59,10 @@ class Peer (threading.Thread):
       t = Transaction(self.pid, receiver, amt)
       msg = Message(t, self.pid, False)
       
-      # Put message in queue to be processes
+      # Put message in queue to be processed
       self._queue.put(msg)
       self._semaphore.release()
       
-      #print "Transaction generated ", t.id, " by peer ", self.pid
-
 
   def _gen_block(self):
     """gen_block helper"""
@@ -134,13 +131,14 @@ class Peer (threading.Thread):
 
 
   def write_to_file(self):
+    """ Helper function to write the peer's details & its block tree to a file. """
     write_string = ""
     write_string += "Peer ID : " + self.pid + "\n"
     write_string += self._blockchain.write_to_file()
     print write_string
     return write_string
 
-
+  """ Helper functions for visualizing the block tree of the peer. """
   def render(self):
     postfix = "(" + self.get_postorder_string() + ")" + self.pid
     return postfix

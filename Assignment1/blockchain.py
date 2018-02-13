@@ -8,7 +8,11 @@ from collections import defaultdict
 
 
 class BlockChain:
-  """ Defines a chain of blocks """
+  """ Maintains the tree of all the blocks a peer has, and also defines the longest chain he's currently working on.
+      Also saves all the leaves int he current tree, which are updated with every new block added.
+      To handle blocks which arrive before their predecessors, the class maintains all such orphaned blocks,
+      and adds them to the tree as soon as their previous blk arrives.
+      Also maintains the current set of txns, and generates blocks using them."""
 
   def __init__(self, gen_block, pid):
 
