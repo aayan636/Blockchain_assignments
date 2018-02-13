@@ -7,11 +7,14 @@ import time
 import threading
 import random
 
-from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
+try:
+  from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
+except ImportError:
+  Simulator._ete2_import = False
 
 class Simulator:
   """Simulator class"""
-  
+  _ete2_import = True
   def __init__(self):
     init_balances = {}
     for i in xrange(Parameters.num_peers):
@@ -28,22 +31,22 @@ class Simulator:
     # testing str of peers.
     t = threading.Timer(5, self.nodes[0].write_to_file) 
     t.start()
-    self.nst = [NodeStyle() for i in xrange(Parameters.num_peers)]
-    self.fnst = [NodeStyle() for i in xrange(Parameters.num_peers)]
-    for i in xrange(Parameters.num_peers):
-      self.nst[i]["bgcolor"] = "#" + str(hex(random.randint(0,256**3-1)))[2:]
-    for i in xrange(Parameters.num_peers):
-      self.fnst[i]["size"] = 15
-      self.fnst[i]["fgcolor"] = self.nst[i]["bgcolor"]      
-
-    self.ts = TreeStyle()
-    # self.ts.mode = "c" #circle
-    self.ts.show_leaf_name = False
-    def my_layout(node):
-      F = TextFace(node.name, tight_text=True)
-      add_face_to_node(F, node, column=0, position="branch-right")
-    self.ts.layout_fn = my_layout
-    # print "Testing nodes' get_delay ", self.nodes[0]._get_delay("P_0", "P_1", False)
+    #for tree generation
+    if Simulator._ete2_import:
+      self.nst = [NodeStyle() for i in xrange(Parameters.num_peers)]
+      self.fnst = [NodeStyle() for i in xrange(Parameters.num_peers)]
+      for i in xrange(Parameters.num_peers):
+        self.nst[i]["bgcolor"] = "#" + str(hex(random.randint(128,255)))[2:] + str(hex(random.randint(128,255)))[2:] + str(hex(random.randint(128,255)))[2:]
+      for i in xrange(Parameters.num_peers):
+        self.fnst[i]["size"] = 15
+        self.fnst[i]["fgcolor"] = self.nst[i]["bgcolor"]      
+      self.ts = TreeStyle()
+      # self.ts.mode = "c" #circle
+      self.ts.show_leaf_name = False
+      def my_layout(node):
+        F = TextFace(node.name, tight_text=True)
+        add_face_to_node(F, node, column=0, position="branch-right")
+      self.ts.layout_fn = my_layout
 
 
   def generate_graph(self):
@@ -98,19 +101,20 @@ class Simulator:
 
 
   def showtree(self):
-    allTrees = ""
-    for i in self.nodes:
-      allTrees += (i.render() + ",")
-    allTrees = "(" + allTrees[:-1] + ");"
-    t = Tree(allTrees, format = 1)
-    for i in self.nodes:
-      D = t.search_nodes(name = i.pid)[0]
-      D.set_style(self.nst[int(i.pid[2:])])
-    for i in xrange(2,Block._id+1):
-      D = t.search_nodes(name = "B_" + str(i))
-      for d in D:
-        d.set_style(self.fnst[int(Block._made_by["B_"+str(i)][2:])])
-    t.show(tree_style = self.ts)
+    if Simulator._ete2_import:
+      allTrees = ""
+      for i in self.nodes:
+        allTrees += (i.render() + ",")
+      allTrees = "(" + allTrees[:-1] + ");"
+      t = Tree(allTrees, format = 1)
+      for i in self.nodes:
+        D = t.search_nodes(name = i.pid)[0]
+        D.set_style(self.nst[int(i.pid[2:])])
+      for i in xrange(2,Block._id+1):
+        D = t.search_nodes(name = "B_" + str(i))
+        for d in D:
+          d.set_style(self.fnst[int(Block._made_by["B_"+str(i)][2:])])
+      t.show(tree_style = self.ts)
 
 
   # for debugging
@@ -129,5 +133,6 @@ if __name__ == '__main__':
   s.print_network_graph()
   s.start_peers()
   time.sleep(10)
-  while True:
-    s.showtree()
+  if Simulator._ete2_import:
+    while True:
+      s.showtree()

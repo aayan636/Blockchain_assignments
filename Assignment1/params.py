@@ -11,7 +11,7 @@ class Parameters:
   txn_per_block = 10
 
   # Block prams
-  block_gen_mean = 15 # Tk mean
+  block_gen_mean = 55 # Tk mean
   block_generation_fee = 50
   
   # Temporary
