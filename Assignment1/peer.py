@@ -115,8 +115,35 @@ class Peer (threading.Thread):
     print write_string
     return write_string
 
+  def render(self):
+    postfix = "(" + self.get_postorder_string() + ")" + self.pid
+    return postfix
+
+  def get_postorder_string(self):
+    b_chain = self._blockchain._all_blocks.values()
+    tree = {}
+    for b in b_chain:
+      if b.previous not in tree:
+        tree[b.previous] = []
+      tree[b.previous].append(b.id)
+    return self.get_postorder("B_1", tree)
+
+  def get_postorder(self, cur, tree):
+    sub_ans = ""
+    if cur in tree.keys():
+      sub_ans = "("
+      for i in tree[cur]:
+        sub_ans += self.get_postorder(i, tree) + ","
+      sub_ans = sub_ans[:-1]
+      sub_ans += (")" + cur)
+    else:
+      sub_ans = cur
+    return sub_ans
+
   def run(self):
     print "Starting Peer ", self.pid
+    # if self.pid == "P_0":
+    #   thread.start_new_thread(self.render, ())
     thread.start_new_thread(self.gen_transaction, ())
     self.gen_block()
     while True:

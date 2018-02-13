@@ -4,6 +4,7 @@ class Block:
   """ Details of a block, stores a dictionary of all txns """
   _id = 0
   _lock = threading.Lock()
+  _made_by = {}
   def __init__(self, previous_blk_id, previous_blk_len, balances, transactions, all_transactions, creator_pid):
     Block._lock.acquire()
     Block._id += 1
@@ -15,6 +16,7 @@ class Block:
     self.balances = balances
     self.transactions = transactions
     self.all_transactions = all_transactions
+    Block._made_by[self.id] = creator_pid
 
 from copy import deepcopy
 if __name__ == '__main__':
