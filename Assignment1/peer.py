@@ -137,7 +137,7 @@ class Peer (threading.Thread):
     write_string = ""
     write_string += "Peer ID : " + self.pid + "\n"
     write_string += self._blockchain.write_to_file()
-    print write_string
+    # print write_string
     return write_string
 
 
