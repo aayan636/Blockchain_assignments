@@ -1,7 +1,8 @@
 import threading
 
 class Transaction:
-  """Details of the transaction"""
+  """ Details of a transaction.  GLobal static counter to give unique id to each txn.
+      Lock needed to handle multiple txns being generated at the same time by different peers."""
   
   # Static variables
   _id = 0

@@ -1,7 +1,8 @@
 import threading
 
 class Block:
-  """ Details of a block, stores a dictionary of all txns """
+  """ Details of a block, stores a dictionary of all txns & balances.
+      Lock is needed to handle multiple blocks being created at the same time. """
   _id = 0
   _lock = threading.Lock()
   _made_by = {}
@@ -24,6 +25,7 @@ class Block:
 # Testing
 from copy import deepcopy
 if __name__ == '__main__':
+  # TESTING :
   b = Block(1,1,1,1,1)
   b1 = b
   b2 = deepcopy(b1)

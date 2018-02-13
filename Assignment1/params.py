@@ -1,5 +1,6 @@
 class Parameters:
-  """All the required parameters"""
+  """ All the required parameters : stored as static members of this class.
+      Easy to use anywhere in the code."""
   
   num_peers = 10    # total number of peers
   z = 1.5           # fraction of slow nodes
