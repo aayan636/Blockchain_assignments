@@ -6,19 +6,16 @@ import time
 from copy import deepcopy
 from collections import defaultdict
 
-a = {}
-MAX = "END"
-a["P_0"] = '\033[95m'
-a["P_1"] = '\033[94m'
-a["P_2"] = '\033[93m'
-a["P_3"] = '\033[92m'
-a["P_4"] = '\033[91m'
-a["END"] = '\033[0m'
 
 class BlockChain:
   """ Defines a chain of blocks """
+
   def __init__(self, gen_block, pid):
+
     self._pid = pid
+    self._lock = threading.Lock()
+
+    # Block related data
     self._all_blocks = {gen_block.id : gen_block}
     self._all_blocks_times = {gen_block.id : time.time()}
     self._all_leaves = set() # set of all block ids.
@@ -29,14 +26,14 @@ class BlockChain:
     
     # current, local txns set
     self._current_transactions = dict()
-    self._current_changes = 0
 
     # Orphaned blocks previous index -> set of blocks
     self._orphaned_blocks = defaultdict(set)
 
-    self._lock = threading.Lock()
 
   def add_block(self, block):
+
+    # Check if block already present
     if block.id in self._all_blocks:
       print "Error : Block id {} received multiple times".format(block.id)
       return False
@@ -44,12 +41,13 @@ class BlockChain:
     # check if prev blk of block is main chain or not
     if block.previous not in self._all_blocks:
       self._orphaned_blocks[block.previous].add(block)
-      print "Semi Error : Block id {} previous not in peer".format(block.id)
+      print "Warning : Block id {} previous not in peer".format(block.id)
       return True
 
     self._lock.acquire()
     self._all_blocks[block.id] = block
     self._all_blocks_times[block.id] = time.time()
+    
     # update leaves
     if block.previous in self._all_leaves:
       self._all_leaves.remove(block.previous)
@@ -59,15 +57,16 @@ class BlockChain:
     if block.length > self._all_blocks[self._current_chain_last_block].length:
       self._current_chain_last_block = block.id
 
+    # Process orphaned blocks
     for b in self._orphaned_blocks[block.id]:
       self._lock.release()
       self.add_block(b)
       self._lock.acquire()
-
     self._orphaned_blocks[block.id].clear()
 
     self._lock.release()
     return True
+
 
   def add_transaction(self, t):
     if t.id in self._current_transactions:
@@ -76,6 +75,7 @@ class BlockChain:
     self._current_transactions[t.id] = t
     self._lock.release()
     return True
+
 
   def get_current_balance(self):
     # might be invalid due to no lock, but fine with generating invalid txns.
@@ -87,23 +87,15 @@ class BlockChain:
       if txn.id in curr_block.all_transactions:
         continue
       if txn.id_x == self._pid:
-        if curr_balance < txn.amount:
-          continue
         curr_balance -= txn.amount
-    return curr_balance
+      elif txn.id_y == self._pid:
+        curr_balance += txn.amount
+    return max(curr_balance, 0)
 
-  def print_longest_chain(self):
-    cur_block = self._current_chain_last_block
-    i = 0
-    txns = set()
-    while cur_block != "B_1":
-      txns |= set(self._all_blocks[cur_block].transactions.values())
-      print a[self._pid] + cur_block + " " + a[MAX],
-      cur_block = self._all_blocks[cur_block].previous
-      i+=1 
-    print a[self._pid] + " B_1 = " + str(len(txns)) + a[MAX]
 
   def generate_block(self):
+    """Generate a new block by current peer"""
+    
     self._lock.acquire()
     prev_block = self._all_blocks[self._current_chain_last_block]
     prev_all_txns = prev_block.all_transactions
@@ -126,20 +118,30 @@ class BlockChain:
 
     self._current_transactions.clear()
     new_block = Block(prev_block.id, prev_block.length, new_balances, new_txns, new_all_txns, self._pid)
-    # this block will be added to the peer's block tree when its added to queue, and add_block is called by peer class.
-    # self._all_blocks[new_block.id] = new_block
-    # self._all_blocks_times[new_block.id] = time.time()
-    # self._all_leaves.remove(self._current_chain_last_block)
-    # self._all_leaves.add(new_block.id)
-    # self._current_chain_last_block = new_block.id
+    
     self._lock.release()
     return new_block
+
 
   def write_to_file(self):
     write_str = ""
     for block_id in self._all_blocks.keys():
       write_str += "Block id : " + block_id + ", Previous Ptr : " + self._all_blocks[block_id].previous + ", Time added to tree : " + str(self._all_blocks_times[block_id] - self._all_blocks_times["B_1"]) + "\n"
     return write_str
+
+
+  # For debugging
+  def print_longest_chain(self):
+    cur_block = self._current_chain_last_block
+    i = 0
+    txns = set()
+    while cur_block != "B_1":
+      txns |= set(self._all_blocks[cur_block].transactions.values())
+      print Parameters.a[self._pid] + cur_block + " " + Parameters.a[MAX],
+      cur_block = self._all_blocks[cur_block].previous
+      i+=1 
+    print Parameters.a[self._pid] + " B_1 = " + str(len(txns)) + Parameters.a[MAX]
+
 
 # for testing
 if __name__ == '__main__':

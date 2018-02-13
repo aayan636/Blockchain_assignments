@@ -8,20 +8,7 @@ import thread
 import threading
 import random
 import Queue
-
-#testing
-from block import Block
-
 from collections import defaultdict
-
-a = {}
-MAX = "END"
-a["P_0"] = '\033[95m'
-a["P_1"] = '\033[94m'
-a["P_2"] = '\033[93m'
-a["P_3"] = '\033[92m'
-a["P_4"] = '\033[91m'
-a["END"] = '\033[0m'
 
 
 class Peer (threading.Thread):
@@ -47,53 +34,79 @@ class Peer (threading.Thread):
   def add_connected_peer(self, peer_id, receiver_func_ptr):
     self._connected_peers_ptrs[peer_id] = receiver_func_ptr
     
+
   def gen_transaction(self):
+    """
+      Generates transactions after expovariant intervals
+      Spawned as a new thread
+    """
     while True:
       waiting_time = random.expovariate(1.0 / Parameters.txn_gen_mean)
+      # Sleep for waiting_time
       time.sleep(waiting_time)
-      # TODO : Set proper transaction
-      if Parameters.num_peers > 1:
-        # select random receiver :
-        self_id_int = int(self.pid[2:])
-        receiver = random.choice(range(0, self_id_int) + range(self_id_int+1, Parameters.num_peers))
-        # select random txn amt
-        curr_balance = self._blockchain.get_current_balance()
-        amt = random.randint(0, curr_balance)
-        t = Transaction(self.pid, "P_" + str(receiver),amt)
-        msg = Message(t, self.pid, False)
-        self._queue.put(msg)
-        self._semaphore.release()
-        #print "Transaction generated ", t.id, " by peer ", self.pid
+
+      # Sanity check
+      if Parameters.num_peers < 1:
+        print "Too few peers"
+        continue
+      
+      # Randomly generate receiver
+      self_id_int = int(self.pid[2:])
+      receiver = "P_" + str(random.choice(range(0, self_id_int) + range(self_id_int+1, Parameters.num_peers)))
+      
+      # create txn, message
+      curr_balance = self._blockchain.get_current_balance()
+      amt = random.randint(0, curr_balance)
+      t = Transaction(self.pid, receiver, amt)
+      msg = Message(t, self.pid, False)
+      
+      # Put message in queue to be processes
+      self._queue.put(msg)
+      self._semaphore.release()
+      
+      #print "Transaction generated ", t.id, " by peer ", self.pid
+
 
   def _gen_block(self):
+    """gen_block helper"""
     block = self._blockchain.generate_block()
     msg = Message(block, self.pid, True)
     self._queue.put(msg)
     self._semaphore.release()
-    print a[self.pid] + "Block generated ", block.id, " by peer ", self.pid, " having ", len(block.transactions), " txns" + a[MAX]
+    print Parameters.a[self.pid] + "Block generated ", block.id, " by peer ", self.pid, " having ", len(block.transactions), " txns" + Parameters.a[MAX]
     self.gen_block()
   
+
   def gen_block(self):
+    """
+      Generates new block at expovarient intervals
+      Creates timer for calling _gen_block
+      Timer object can be cancelled on receiving a new block
+      _gen_block again calls this function on successfully creating block
+    """
     waiting_time = random.expovariate(1.0 / (self._block_gen_mean)) # Tk
     self._block_timer = threading.Timer(waiting_time, self._gen_block)
     self._block_timer.start()
 
+
   def receive_message(self, message):
+    """Every connected peer has a ptr to this function"""
     self._queue.put(message)
     self._semaphore.release()
 
   def process_message(self, message):
+    """Process message from queue"""
+
     # add to received objects
     msg_set = self._recvd_or_sent[message.content.id]
     msg_set.add(message.sender)
     new_message = Message(message.content, self.pid, message.is_block)
 
     # print "Processing message id {} by peer {} sent by {}".format(message.content.id, self.pid, message.sender)
-    
+    # Process as per type of message
     if not message.is_block:
       self._blockchain.add_transaction(message.content)
     else:
-      # ORDER : TODO
       if self._blockchain.add_block(message.content):
         self._block_timer.cancel()
         self.gen_block()
@@ -108,6 +121,18 @@ class Peer (threading.Thread):
         delay = self._get_delay(self.pid, p, message.is_block)
         new_message.send(p_recv_ptr, delay)
 
+
+  def run(self):
+    """Thread run"""
+    print "Starting Peer ", self.pid
+    thread.start_new_thread(self.gen_transaction, ())
+    self.gen_block()
+    # Process messages from queue
+    while True:
+      self._semaphore.acquire()
+      self.process_message(self._queue.get())
+
+
   def write_to_file(self):
     write_string = ""
     write_string += "Peer ID : " + self.pid + "\n"
@@ -115,10 +140,12 @@ class Peer (threading.Thread):
     print write_string
     return write_string
 
+
   def render(self):
     postfix = "(" + self.get_postorder_string() + ")" + self.pid
     return postfix
 
+  # Render helper
   def get_postorder_string(self):
     b_chain = self._blockchain._all_blocks.values()
     tree = {}
@@ -128,6 +155,7 @@ class Peer (threading.Thread):
       tree[b.previous].append(b.id)
     return self.get_postorder("B_1", tree)
 
+  # Render helper
   def get_postorder(self, cur, tree):
     sub_ans = ""
     if cur in tree.keys():
@@ -140,17 +168,10 @@ class Peer (threading.Thread):
       sub_ans = cur
     return sub_ans
 
-  def run(self):
-    print "Starting Peer ", self.pid
-    # if self.pid == "P_0":
-    #   thread.start_new_thread(self.render, ())
-    thread.start_new_thread(self.gen_transaction, ())
-    self.gen_block()
-    while True:
-      self._semaphore.acquire()
-      self.process_message(self._queue.get())
+
 
 # For testing
+from block import Block
 if __name__ == '__main__':
   def get_delay():
     return 5

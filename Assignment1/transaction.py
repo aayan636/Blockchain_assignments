@@ -3,14 +3,16 @@ import threading
 class Transaction:
   """Details of the transaction"""
   
-  # Static tid
+  # Static variables
   _id = 0
   _lock = threading.Lock()
+  
   def __init__(self, id_x, id_y, amount):
     Transaction._lock.acquire()
     Transaction._id += 1
     self.id = "T_"+str(Transaction._id)
     Transaction._lock.release()
+    
     self.id_x = id_x
     self.id_y = id_y
     self.amount = amount

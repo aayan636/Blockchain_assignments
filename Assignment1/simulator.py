@@ -1,10 +1,11 @@
-from params import Parameters
 from peer import Peer
 from block import Block
-
-import random, threading, time
-
+from params import Parameters
 from transaction import Transaction
+
+import time
+import threading
+import random
 
 from ete2 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 
@@ -44,8 +45,12 @@ class Simulator:
     self.ts.layout_fn = my_layout
     # print "Testing nodes' get_delay ", self.nodes[0]._get_delay("P_0", "P_1", False)
 
-  # change to make this customisable
+
   def generate_graph(self):
+    """
+      Generates graph of connected peers
+      Change to make this customisable
+    """
     temp_graph = [[] for i in xrange(Parameters.num_peers)]
     unconnected = set([i for i in xrange(Parameters.num_peers)])
     while len(unconnected) > 1:
@@ -68,32 +73,29 @@ class Simulator:
       graph["P_" + str(i)] = list(set(temp_graph[i]))
     return graph
 
+
   def assign_neighbours(self):
     for i in xrange(len(self.nodes)):
       cur_neighbours = self.network_graph["P_" + str(i)]
       for j in cur_neighbours:
         self.nodes[i].add_connected_peer(j.pid, j.receive_message)
 
+
   def start_peers(self):
+    """Start thread for each peer"""
     for i in self.nodes:
       i.start()
 
-  # debugging
-  def print_network_graph(self):
-    print "Printing network graph : "
-    for i in xrange(len(self.network_graph)):
-      print i
-      for j in self.network_graph["P_" + str(i)]:
-        print j.pid, 
-      print "\n"
 
   def get_delay(self, pid1, pid2, is_block):
+    """Get the network delay between pid1 and pid2"""
     is_slow = self.node_is_slow[pid1] or self.node_is_slow[pid2]
     p = random.uniform(Parameters.p_min, Parameters.p_max)
     c = Parameters.c_low if is_slow else Parameters.c_high
     m = Parameters.m if is_block else 0
     d = random.expovariate(c / Parameters.d)
     return (p + m/c + d)
+
 
   def showtree(self):
     allTrees = ""
@@ -109,6 +111,17 @@ class Simulator:
       for d in D:
         d.set_style(self.fnst[int(Block._made_by["B_"+str(i)][2:])])
     t.show(tree_style = self.ts)
+
+
+  # for debugging
+  def print_network_graph(self):
+    print "Printing network graph : "
+    for i in xrange(len(self.network_graph)):
+      print i
+      for j in self.network_graph["P_" + str(i)]:
+        print j.pid, 
+      print "\n"
+
 
 # For testing
 if __name__ == '__main__':
