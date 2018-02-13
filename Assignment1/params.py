@@ -1,7 +1,7 @@
 class Parameters:
   """All the required parameters"""
   
-  num_peers = 5    # total number of peers
+  num_peers = 10    # total number of peers
   z = 1.5           # fraction of slow nodes
   start_balance = 100 
 
@@ -14,7 +14,7 @@ class Parameters:
   block_generation_fee = 50
   
   # Temporary
-  num_neighbours = 2
+  num_neighbours = 3
 
   # Latency parameters
   p_min = 0.01
@@ -33,3 +33,6 @@ class Parameters:
   a["P_3"] = '\033[92m'
   a["P_4"] = '\033[91m'
   a["END"] = '\033[0m'
+
+  for i in xrange(5, num_peers):
+    a["P_"+str(i)] = a["P_"+str(i%5)]

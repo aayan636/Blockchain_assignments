@@ -73,7 +73,7 @@ class Peer (threading.Thread):
     msg = Message(block, self.pid, True)
     self._queue.put(msg)
     self._semaphore.release()
-    print Parameters.a[self.pid] + "Block generated ", block.id, " by peer ", self.pid, " having ", len(block.transactions), " txns" + Parameters.a[MAX]
+    print Parameters.a[self.pid] + "Block generated ", block.id, " by peer ", self.pid, " having ", len(block.transactions), " txns" + Parameters.a[Parameters.MAX]
     self.gen_block()
   
 

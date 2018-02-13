@@ -137,10 +137,10 @@ class BlockChain:
     txns = set()
     while cur_block != "B_1":
       txns |= set(self._all_blocks[cur_block].transactions.values())
-      print Parameters.a[self._pid] + cur_block + " " + Parameters.a[MAX],
+      print Parameters.a[self._pid] + cur_block + " " + Parameters.a[Parameters.MAX],
       cur_block = self._all_blocks[cur_block].previous
       i+=1 
-    print Parameters.a[self._pid] + " B_1 = " + str(len(txns)) + Parameters.a[MAX]
+    print Parameters.a[self._pid] + " B_1 = " + str(len(txns)) + Parameters.a[Parameters.MAX]
 
 
 # for testing
