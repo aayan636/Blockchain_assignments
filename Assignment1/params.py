@@ -2,7 +2,7 @@ class Parameters:
   """ All the required parameters : stored as static members of this class.
       Easy to use anywhere in the code."""
   
-  num_peers = 10    # total number of peers
+  num_peers = 50    # total number of peers
   z = 1.5           # fraction of slow nodes
   start_balance = 100 
 
@@ -11,11 +11,11 @@ class Parameters:
   txn_per_block = 10
 
   # Block prams
-  block_gen_mean = 55 # Tk mean
+  block_gen_mean = 125 # Tk mean
   block_generation_fee = 50
   
   # Temporary
-  num_neighbours = 3
+  num_neighbours = 4
 
   # Latency parameters
   p_min = 0.01

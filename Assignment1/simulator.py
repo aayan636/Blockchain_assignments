@@ -65,7 +65,7 @@ class Simulator:
       temp_graph[node1].append(self.nodes[node2])
     unconnected = set([i for i in xrange(Parameters.num_peers)])
     i = 0
-    for i in xrange(Parameters.num_peers*(Parameters.num_neighbours/2-1)):
+    for i in xrange(Parameters.num_peers*Parameters.num_neighbours/2-Parameters.num_peers):
       a = random.sample(unconnected, 1)[0]
       b = random.sample(unconnected, 1)[0]
       while b == a:
@@ -106,11 +106,14 @@ class Simulator:
       allTrees = ""
       for i in self.nodes:
         allTrees += (i.render() + ",")
+        break
       allTrees = "(" + allTrees[:-1] + ");"
       t = Tree(allTrees, format = 1)
       for i in self.nodes:
-        D = t.search_nodes(name = i.pid)[0]
-        D.set_style(self.nst[int(i.pid[2:])])
+        D = t.search_nodes(name = i.pid)
+        if len(D) > 0:
+          Dt = D[0]
+          Dt.set_style(self.nst[int(i.pid[2:])])
       for i in xrange(2,Block._id+1):
         D = t.search_nodes(name = "B_" + str(i))
         for d in D:
@@ -120,12 +123,13 @@ class Simulator:
 
   # for debugging
   def print_network_graph(self):
-    print "Printing network graph : "
+    string = "Printing network graph : \n"
     for i in xrange(len(self.network_graph)):
-      print i
+      string += str(i) + ": "
       for j in self.network_graph["P_" + str(i)]:
-        print j.pid, 
-      print "\n"
+        string += str(j.pid) + ", " 
+      string += "\n"
+    return string
 
 
 # For testing

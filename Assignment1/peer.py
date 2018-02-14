@@ -29,7 +29,7 @@ class Peer (threading.Thread):
     self._block_timer = None
     # the random no denotes the computation power of the peer. lower the random no, higher the comp. power.
     self._block_gen_mean = Parameters.block_gen_mean * (random.uniform(0.5, 1.0))
-
+#(2)**(-int(pid[2:]))#
     
   def add_connected_peer(self, peer_id, receiver_func_ptr):
     self._connected_peers_ptrs[peer_id] = receiver_func_ptr

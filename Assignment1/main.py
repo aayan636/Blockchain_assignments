@@ -7,6 +7,10 @@ s = Simulator()
 
 def start_simulation():
 	global s
+	text_file = open("outputs/Network_graph.txt", "w")
+	text_file.write(s.print_network_graph())
+	text_file.close()
+	print s.print_network_graph()
 	s.start_peers()
 	time.sleep(10)
 	while True:
