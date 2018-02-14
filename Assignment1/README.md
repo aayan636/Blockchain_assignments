@@ -35,7 +35,9 @@ This project is a simulation of blockchain.
 # How to run
 
 Prerequisite : ete2 package to render blockchain trees
+Change the parameters in `params.py`
 
-`python main.py`
+run `python main.py`
 
-Aayan, refer to https://help.github.com/articles/basic-writing-and-formatting-syntax/ for syntax
+Press `ctrl + \` to take save the tree file of each node.
+The output is saved in `outputs` folder
