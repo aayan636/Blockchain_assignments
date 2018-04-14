@@ -10,13 +10,15 @@ compiledCode = solc.compile(code)
 console.log(compiledCode)
 
 abiDefinition = JSON.parse(compiledCode.contracts[':MainContract'].interface)
-// VotingContract = web3.eth.contract(abiDefinition)
-// byteCode = compiledCode.contracts[':Voting'].bytecode
-// deployedContract = VotingContract.new(['Rama','Nick','Jose'],{data: byteCode, from: web3.eth.accounts[0], gas: 4700000})
-// deployedContract.address
-// contractInstance = VotingContract.at(deployedContract.address)
+MainContract = web3.eth.contract(abiDefinition)
+byteCode = compiledCode.contracts[':MainContract'].bytecode
+deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000})
+deployedContract.address
+contractInstance = MainContract.at(deployedContract.address)
 
 // console.log("done till line 19")
 // console.log(contractInstance) 
-
+contractInstance.make_creator.call();
+contractInstance
+// contractInstance.add_media.call();
 // console.log(contractInstance.totalVotesFor.call('Rama'))
