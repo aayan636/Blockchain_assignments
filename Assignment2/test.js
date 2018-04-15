@@ -6,37 +6,24 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 code = fs.readFileSync('contract.sol').toString()
 
 compiledCode = solc.compile(code)
-
 console.log(compiledCode)
 
 abiDefinition = JSON.parse(compiledCode.contracts[':MainContract'].interface)
 MainContract = web3.eth.contract(abiDefinition)
 byteCode = compiledCode.contracts[':MainContract'].bytecode
+
 deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000},
   (err, contract) => {
-    if (contract.address !== undefined) {
+    if (contract.address != undefined) {
       console.log("Contract address : ", contract.address)
       console.log("DepContract address : ", deployedContract.address)
       contractInstance = MainContract.at(deployedContract.address)
-      contractInstance.make_creator.call((err, x) => {
-        console.log("Creator made", err, x);
-        contractInstance.get_all_creators.call((err, resp) => {
-          console.log("get all creators", err, resp)
-          // contractInstance.get_all_creators.call((err, resp) => {
-          //   console.log("get all creators II", err, resp)
-          // })
-        })
-      });
+      acct_address = web3.eth.accounts[0]
+      contractInstance.make_creator({data: byteCode, from: acct_address, gas: 4700000})
+      console.log(contractInstance.get_all_creators({data: byteCode, from: acct_address, gas: 4700000}))
+      contractInstance.add_media(5, 4, [web3.eth.accounts[9], web3.eth.accounts[7]], [50, 30], {data: byteCode, from: acct_address, gas: 4700000})
+      // console.log(contractInstance.get_num_media({data: byteCode, from: acct_address, gas: 4700000}))
+      console.log(contractInstance.get_all_media(true, {data: byteCode, from: web3.eth.accounts[5], gas: 4700000}))
     }
   }
 )
-
-// setTimeout(console.log(contractInstance.get_all_creators.call()), 3000);
-// contractInstance = MainContract.at(deployedContract.address)
-
-// console.log(contractInstance)
-// contractInstance.make_creator.call();
-
-// contractInstance
-// contractInstance.add_media.call();
-// console.log(contractInstance.totalVotesFor.call('Rama'))
