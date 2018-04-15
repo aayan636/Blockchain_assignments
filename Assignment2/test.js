@@ -12,13 +12,24 @@ console.log(compiledCode)
 abiDefinition = JSON.parse(compiledCode.contracts[':MainContract'].interface)
 MainContract = web3.eth.contract(abiDefinition)
 byteCode = compiledCode.contracts[':MainContract'].bytecode
-deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000})
-deployedContract.address
-contractInstance = MainContract.at(deployedContract.address)
+deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000},
+  (err, contract) => {
+    if (contract.address !== undefined) {
+      console.log("Contract address : ", contract.address)
+      console.log("DepContract address : ", deployedContract.address)
+      contractInstance = MainContract.at(deployedContract.address)
+      contractInstance.make_creator.call();
+      console.log("DONE")
+    }
+  }
+)
 
-// console.log("done till line 19")
-// console.log(contractInstance) 
-contractInstance.make_creator.call();
-contractInstance
+// setTimeout(console.log(contractInstance.get_all_creators.call()), 3000);
+// contractInstance = MainContract.at(deployedContract.address)
+
+// console.log(contractInstance)
+// contractInstance.make_creator.call();
+
+// contractInstance
 // contractInstance.add_media.call();
 // console.log(contractInstance.totalVotesFor.call('Rama'))
