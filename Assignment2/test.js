@@ -14,29 +14,12 @@ MainContract = web3.eth.contract(abiDefinition)
 byteCode = compiledCode.contracts[':MainContract'].bytecode
 deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000},
   (err, contract) => {
-    if (contract.address !== undefined) {
+    if (contract.address != undefined) {
       console.log("Contract address : ", contract.address)
       console.log("DepContract address : ", deployedContract.address)
       contractInstance = MainContract.at(deployedContract.address)
-      contractInstance.make_creator.call((err, x) => {
-        console.log("Creator made", err, x);
-        contractInstance.get_all_creators.call((err, resp) => {
-          console.log("get all creators", err, resp)
-          // contractInstance.get_all_creators.call((err, resp) => {
-          //   console.log("get all creators II", err, resp)
-          // })
-        })
-      });
+      contractInstance.make_creator({data: byteCode, from: web3.eth.accounts[0], gas: 4700000})
+      console.log(contractInstance.get_all_creators({data: byteCode, from: web3.eth.accounts[0], gas: 4700000}))
     }
   }
 )
-
-// setTimeout(console.log(contractInstance.get_all_creators.call()), 3000);
-// contractInstance = MainContract.at(deployedContract.address)
-
-// console.log(contractInstance)
-// contractInstance.make_creator.call();
-
-// contractInstance
-// contractInstance.add_media.call();
-// console.log(contractInstance.totalVotesFor.call('Rama'))
