@@ -18,8 +18,15 @@ deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0],
       console.log("Contract address : ", contract.address)
       console.log("DepContract address : ", deployedContract.address)
       contractInstance = MainContract.at(deployedContract.address)
-      contractInstance.make_creator.call();
-      console.log("DONE")
+      contractInstance.make_creator.call((err, x) => {
+        console.log("Creator made", err, x);
+        contractInstance.get_all_creators.call((err, resp) => {
+          console.log("get all creators", err, resp)
+          // contractInstance.get_all_creators.call((err, resp) => {
+          //   console.log("get all creators II", err, resp)
+          // })
+        })
+      });
     }
   }
 )

@@ -18,12 +18,16 @@ contract MainContract {
 
   mapping (address => Creator) creator_map;
   address[] creator_addresses;
+  uint[10] random;
+  mapping (uint => uint) x;
 
-  function make_creator() public {
+  function make_creator() public returns (uint) {
     require(!creator_map[msg.sender].exists);
     creator_map[msg.sender] = Creator(0, true);
-    creator_addresses.length += 1;
-    creator_addresses[creator_addresses.length - 1] = msg.sender;
+    creator_addresses.push(msg.sender);
+    random[0] = 11;
+    x[0] = 55;
+    return x[0];
   }
 
   function add_media(address cid, uint cost_individual, uint cost_company, address[] stake_addr, uint8[] stakes /*Media Args here*/) public {
@@ -37,7 +41,7 @@ contract MainContract {
     creator_map[cid].num_media += 1;
   }
 
-  function get_all_creators() view public returns (address[]) {
-    return creator_addresses;
+  function get_all_creators() view public returns (uint) {
+    return x[0];
   }
 }
