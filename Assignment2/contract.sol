@@ -2,6 +2,9 @@ pragma solidity ^0.4.18;
 
 contract MainContract {
   
+  event received_payment(address creator, address consumer, uint media_id);
+  event received_media(address creator, address consumer, uint media_id);
+
   struct StakeHolder {
     address stake_holder_address; // Address of stake_holder
     uint8 share;  // share given to stake_holder
@@ -14,6 +17,7 @@ contract MainContract {
     uint num_stake_holder;
     mapping (uint => StakeHolder) stake_holder_map;
     mapping (address => bool) consumers; // all customers who bought this media
+    mapping (address => bytes32) encrypted_url;
   }
   
   struct Creator {
@@ -25,6 +29,11 @@ contract MainContract {
   // Address and mapping of creators
   address[] creator_addresses;
   mapping (address => Creator) creator_map;
+
+  // Checks if sender is creator
+  function is_creator() view public returns(bool) {
+    return creator_map[msg.sender].exists;
+  }
 
   // Initializes a new creator with sender's address
   function make_creator() public {
@@ -56,6 +65,7 @@ contract MainContract {
     creator_map[cid].num_media += 1;
   }
 
+  // Get's all media for consumer
   function get_all_media(bool is_individual) view public returns (address[], uint[], uint[]) {
     uint size = 0;
     Creator storage creator;
@@ -109,9 +119,23 @@ contract MainContract {
     }
     
     for(i=0; i<m.num_stake_holder; ++i){
-      uint amount = (msg.value * m.stake_holder_map[i].share) / total_shares;
+      uint amount = (msg.value * uint(m.stake_holder_map[i].share)) / uint(total_shares);
       m.stake_holder_map[i].stake_holder_address.transfer(amount);
     }
+    received_payment(creator, msg.sender, media_id);
+  }
+
+  function publish_url(uint media_id, address consumers_id, bytes32 url) public {
+    require(creator_map[msg.sender].exists);
+    require(media_id < creator_map[msg.sender].num_media);
+    creator_map[msg.sender].media_map[media_id].encrypted_url[consumers_id] = url;
+    received_media(msg.sender, consumers_id, media_id);
+  }
+
+  function get_media(address creator, uint media_id) view public returns (bytes32) {
+    require(creator_map[creator].exists);
+    require(media_id < creator_map[creator].num_media);
+    return creator_map[creator].media_map[media_id].encrypted_url[msg.sender];
   }
 
   // ****************************************************
