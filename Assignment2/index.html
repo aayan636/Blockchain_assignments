@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+   <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="author" content="">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Buy & Sell Media</title>
+  <!-- <script type="text/javascript" src="script.js"></script> -->
+  <script src="./node_modules/web3/dist/web3.min.js"></script>
+  <script type="text/javascript" src="./jsreferences/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript">
+    console.log("Blah!");
+    var server_url = "http://localhost:8081";
+    var is_creator = true;
+    var abi, contract_addr;
+    $(function() {
+      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+      // TODO : call an api to get abi, address of deployedcontract
+      $ajax({
+        type:'GET',
+        data: {},
+        url: server_url+'/get_abi_addr',
+        success: function(data) {
+          // TODO : update abi, addr
+        },
+        error: function(data) {
+
+        }
+      })
+
+      var mainContract = web3.eth.contract(abi);
+      var deployedContract = mainContract.at(contract_addr);
+
+      $('#check_address').click(function(e){
+        console.log("Check address clicked");
+        var address_entered = $('#user_address').text();
+        $.ajax({
+          type: 'GET',
+          data: {address:address_entered},
+          url: server_url+'/is_creator',
+          success: function(data) {
+          console.log("success");
+          // PARSE DATA TO UPDATE is_creator. TODO
+          $('#LoginDiv').hide();
+          // add event watch TODO
+          },
+        error: function() {
+          console.log("Error");
+          }
+        })
+      });
+
+      $('#become_creator').click(function(e){
+        console.log("Become Creator clicked");
+        $.ajax({
+          // TODO
+        });
+      })
+
+      $('#get_all_media').click(function(e){
+
+      })
+    })
+  </script>
+</head>
+<!-- onload="onLoadCall()" -->
+<body >
+
+  <div id="LoginDiv" align="center">
+      <input id="user_address" type="text">
+      <button id="check_address">Click to Proceed</button>
+  </div>
+
+  <div id="ConsumerDiv" align="left">
+    <button id="become_creator">Become A Media Creator</button>
+    <button id="get_all_media">See All Available Media</button>
+  </div>
+
+</body>
+
+</html>
