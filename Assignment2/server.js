@@ -5,11 +5,11 @@ Web3 = require('web3')
 fs = require('fs');
 solc = require('solc')
 
-web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
+web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"))
 code = fs.readFileSync('contract.sol').toString()
 compiledCode = solc.compile(code)
 
-console.log({"yo" : web3.eth.accounts[0]})
+console.log({"yo2" : web3.eth.accounts[0]})
 
 abi = JSON.parse(compiledCode.contracts[':MainContract'].interface)
 MainContract = web3.eth.contract(abi)
@@ -31,6 +31,14 @@ deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0],
     }
   }
 )
+
+// get_abi_addr
+app.get('/get_abi_addr', function(req, res){
+  result = {};
+  result["abi"] = abi;
+  result["addr"] = deployedContract.address;
+  res.send(result)
+});
 
 // is_creator
 app.get('/is_creator', function(req, res){

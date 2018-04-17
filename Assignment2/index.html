@@ -13,26 +13,32 @@
   <script type="text/javascript" src="./jsreferences/jquery-1.11.1.min.js"></script>
   <script type="text/javascript">
     console.log("Blah!");
-    var server_url = "http://localhost:8081";
+    var server_url = "http://127.0.0.1:8081";
     var is_creator = true;
     var abi, contract_addr;
-    $(function() {
-      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    var mainContract;
+    var deployedContract;
+    var number_of_shares = 0;
+    $(document).ready(function() {
+      web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
       // TODO : call an api to get abi, address of deployedcontract
-      $ajax({
+      $.ajax({
         type:'GET',
         data: {},
         url: server_url+'/get_abi_addr',
         success: function(data) {
-          // TODO : update abi, addr
+          abi = data["abi"];
+          contract_addr = data["addr"];
+          mainContract = web3.eth.contract(abi);
+          deployedContract = mainContract.at(contract_addr);
+          console.log("get_abi_addr succesful");
         },
         error: function(data) {
-
+          console.log("get_abi_addr fail")
+          console.log(data)
         }
       })
 
-      var mainContract = web3.eth.contract(abi);
-      var deployedContract = mainContract.at(contract_addr);
 
       $('#check_address').click(function(e){
         console.log("Check address clicked");
@@ -42,8 +48,9 @@
           data: {address:address_entered},
           url: server_url+'/is_creator',
           success: function(data) {
-          console.log("success");
-          // PARSE DATA TO UPDATE is_creator. TODO
+          console.log("verified address is_creator = " +  data);
+          is_creator = data  
+          $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
           $('#LoginDiv').hide();
           // add event watch TODO
           },
@@ -63,6 +70,13 @@
       $('#get_all_media').click(function(e){
 
       })
+   
+      /////////////////////////////////////////
+
+      $("#add_stakeholders").click(function(e){
+        $("#add_media").append('<br/><input id="stk'+number_of_shares +'" type="text" placeholder="Stakeholder address"> <input id="stk'+number_of_shares +'" type="text" placeholder="Stakeholder shares">')
+        number_of_shares += 1;
+      })
     })
   </script>
 </head>
@@ -77,6 +91,17 @@
   <div id="ConsumerDiv" align="left">
     <button id="become_creator">Become A Media Creator</button>
     <button id="get_all_media">See All Available Media</button>
+    <div id="all_media_list"> </div>
+  </div>
+
+  <div id="CreatorDiv" align="right">
+    <p id="is_creator"></p>
+    <div id="add_media"> 
+      <button id="add_media_button">Add the following: </button><br/>
+      <input id="ind_cost" type="text" placeholder="Individual Cost">
+      <input id="com_cost" type="text" placeholder="Company Cost">
+      <button id="add_stakeholders">Add Stakeholders</button>      
+    </div>
   </div>
 
 </body>
