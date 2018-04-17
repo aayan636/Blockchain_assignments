@@ -49,6 +49,7 @@ contract MainContract {
     // Creator should exist
     require(creator_map[cid].exists);
     require(stake_addr.length == stakes.length);
+    require(stake_addr.length > 0);
     
     // Get media uid
     uint m_id = creator_map[cid].num_media;
@@ -103,11 +104,13 @@ contract MainContract {
     return (creators, media_ids, costs);
   }
 
+  // Consumer can buy media
   function buy_media(address creator, uint media_id, bool is_individual) public payable {
     require(creator_map[creator].exists);
     require(media_id < creator_map[creator].num_media);
     
     Media storage m = creator_map[creator].media_map[media_id];
+    require(!m.consumers[msg.sender]);
     if(is_individual) require(msg.value == m.cost_individual);
     else require(msg.value == m.cost_company);
 
@@ -125,6 +128,7 @@ contract MainContract {
     received_payment(creator, msg.sender, media_id);
   }
 
+  // Creator to publish encrypted url
   function publish_url(uint media_id, address consumers_id, bytes32 url) public {
     require(creator_map[msg.sender].exists);
     require(media_id < creator_map[msg.sender].num_media);
@@ -132,6 +136,7 @@ contract MainContract {
     received_media(msg.sender, consumers_id, media_id);
   }
 
+  // Consumer can get the url
   function get_media(address creator, uint media_id) view public returns (bytes32) {
     require(creator_map[creator].exists);
     require(media_id < creator_map[creator].num_media);
