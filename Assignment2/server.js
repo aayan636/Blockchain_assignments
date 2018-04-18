@@ -19,7 +19,7 @@ deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0],
   (err, contract) => {
     if (contract.address != undefined){
       contractInstance = MainContract.at(deployedContract.address)
-    
+      contractInstance.make_creator({from: web3.eth.accounts[0], gas: 470000})
       contractInstance.received_payment((err, res) => {
         console.log("YO RECEIVED PAYMENT", err, res);
         // contractInstance.publish_url(res.args.media_id, res.args.consumer, "RANDOM URL", {data: byteCode, from: res.args.creator, gas: 4700000})
@@ -42,7 +42,8 @@ app.get('/get_abi_addr', function(req, res){
 
 // is_creator
 app.get('/is_creator', function(req, res){
-  is_creator = contractInstance.is_creator({from : req.query.address})
+  console.log(req.query)
+  is_creator = contractInstance.is_creator({from: req.query.address, gas: 470000})
   res.send(is_creator)
 });
 
@@ -54,12 +55,17 @@ app.get('/make_creator', function(req, res){
 
 // add_media
 app.get('/add_media', function(req, res){
+  console.log(req.query)
+  var new_stakes = []
+  for (var i = 0; i < req.query.stake.length; i++)
+    new_stakes.push(parseInt(req.query.stake[i]))
+  console.log(web3.toWei(parseInt(req.query.cost_individual), 'ether'), new_stakes)
   contractInstance.add_media(
     web3.toWei(parseInt(req.query.cost_individual), 'ether'), 
-    web3.toWei(parseInt(req.query.cost_company), 'ether'), 
-    req.query.stake_addr,/* TODO : FIGURE OUT HOW TO CONVERT THIS*/
-    req.query.stakes, /* TODO : FIGURE OUT HOW TO CONVERT THIS*/
-    {from : req.query.address, gas: 4700000}
+    web3.toWei(parseInt(req.query.cost_company), 'ether'),
+    req.query.stake_addr,
+    new_stakes,
+    {data: byteCode, from: req.query.address, gas: 4700000}
   )
   res.send("done")
 })
@@ -76,8 +82,10 @@ app.get('/get_all_media', function(req, res){
 
 // buy_media
 app.get('/buy_media', function(req, res){
-  all_media = contractInstance.get_all_media(
-    (req.query.is_individual == 'true'),
+  all_media = contractInstance.buy_media(
+    req.query.address, // TODO parse to addr
+    parseInt(req.query.media_id),
+    req.query.is_individual,
     {from : req.query.address}
   )
   res.send(all_media)

@@ -15,13 +15,31 @@
     console.log("Blah!");
     var server_url = "http://127.0.0.1:8081";
     var is_creator = true;
+    var individual = true;
     var abi, contract_addr;
     var mainContract;
     var deployedContract;
     var number_of_shares = 0;
+    var self_addr = "";
+    var buyMedia = function (_creator, _media_id) {
+          console.log("buymedia" + creator + "," + media_id)
+          $.ajax({
+            type:'GET',
+            data: {creator:_creator, media_id:_media_id, is_individual:individual},
+            url: server_url + '/buy_media',
+            success: function(data) {
+              console.log("Success buy_media")
+              console.log(data)
+            },
+            failure: function(data) {
+              console.log("Failure buy_media")
+              console.log(data)
+            }
+          })
+    }
     $(document).ready(function() {
       web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
-      // TODO : call an api to get abi, address of deployedcontract
+      // if creator listen to payment else to media
       $.ajax({
         type:'GET',
         data: {},
@@ -41,15 +59,17 @@
 
 
       $('#check_address').click(function(e){
-        console.log("Check address clicked");
-        var address_entered = $('#user_address').text();
+        var address_entered = $('#user_address').val();
+        console.log("Check address clicked", address_entered);
+        self_addr = address_entered;
         $.ajax({
           type: 'GET',
           data: {address:address_entered},
           url: server_url+'/is_creator',
           success: function(data) {
           console.log("verified address is_creator = " +  data);
-          is_creator = data  
+          is_creator = data
+          // console.log(address_entered, "xyz", self_addr)
           $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
           $('#LoginDiv').hide();
           // add event watch TODO
@@ -63,19 +83,92 @@
       $('#become_creator').click(function(e){
         console.log("Become Creator clicked");
         $.ajax({
-          // TODO
-        });
+          type: 'GET',
+          data: {},
+          url: server_url + '/make_creator',
+          success: function(data) {
+            console.log("Current window became creator")
+          },
+          error: function(data) {
+            console.log("Current window FAILED to become creator")
+          }
+        })
       })
+
+      $(document).ready()
 
       $('#get_all_media').click(function(e){
+        
+        $.ajax({
+          type: 'GET',
+          data: {is_individual:individual},
+          url: server_url+'/get_all_media',
+          success: function(data) {
+            console.log("get_all_media success")
+            console.log(data)
+            
+            $("#list_medias").html ("");
 
+            if(data.length != 3)
+              return;
+
+              var creator = "CREATOR ||"
+              var media_id = "MEDIA ID ||"
+              var cost = "COST"
+              var display = "" + creator + " " + media_id + " " + cost + " <br/>" 
+              $("#list_medias").append(display) 
+
+            for(var i = 0; i < data[0].length; i++) {
+              var creator = data[0][i]
+              var media_id = data[1][i]
+              var cost = data[2][i] + " Wei"
+              var button = '<button id="B'+creator+':'+media_id+' onClick=buyMedia('+creator+','+media_id+')" > Buy this </button> <br/>'
+              var display = "" + creator + " || " + media_id + " || " + cost + " || " + button
+              $("#list_medias").append(display) 
+            }
+          },
+          error: function(data) {
+            console.log("get_all_media error")
+          }
+        });
       })
    
+      $('#add_media_button').click(function(e){
+        var stake_addr = [];
+        var stake_val = [];
+        var ind_cost = parseInt($('#ind_cost').val());
+        var com_cost = parseInt($('#com_cost').val());
+        for(var i = 0; i < number_of_shares; i++) {
+          stake_addr.push($('#stk' + i).val())
+          stake_val.push($('#shr' + i).val())
+        }
+
+          $.ajax({
+            type: 'GET',
+            data: {cost_individual: ind_cost, cost_company: com_cost, stake_addr: stake_addr, stake: stake_val, address: self_addr},
+            url: server_url+'/add_media',
+            success: function(data) {
+              console.log('add_media success');
+              for(var i = 0; i < number_of_shares; i++) {
+                $('#stk' + i).remove()
+                $('#shr' + i).remove()
+                number_of_shares = 0
+                $("#add_stakeholders").show();
+              }
+            },
+            error: function(data) {
+              console.log('add_media error');
+            }
+          })
+      })
+
       /////////////////////////////////////////
 
       $("#add_stakeholders").click(function(e){
-        $("#add_media").append('<br/><input id="stk'+number_of_shares +'" type="text" placeholder="Stakeholder address"> <input id="stk'+number_of_shares +'" type="text" placeholder="Stakeholder shares">')
+        $("#add_media").append('<br/><input id="stk'+number_of_shares +'" type="text" placeholder="Stakeholder address"> <input id="shr'+number_of_shares +'" type="text" placeholder="Stakeholder shares">')
         number_of_shares += 1;
+        if(number_of_shares >= 5)
+          $("#add_stakeholders").hide();
       })
     })
   </script>
@@ -91,16 +184,17 @@
   <div id="ConsumerDiv" align="left">
     <button id="become_creator">Become A Media Creator</button>
     <button id="get_all_media">See All Available Media</button>
-    <div id="all_media_list"> </div>
+    <div id="list_medias"> </div> 
+
   </div>
 
   <div id="CreatorDiv" align="right">
     <p id="is_creator"></p>
     <div id="add_media"> 
-      <button id="add_media_button">Add the following: </button><br/>
+      <button id="add_media_button">Add the Media: </button><br/>
       <input id="ind_cost" type="text" placeholder="Individual Cost">
       <input id="com_cost" type="text" placeholder="Company Cost">
-      <button id="add_stakeholders">Add Stakeholders</button>      
+      <button id="add_stakeholders">Add Stakeholders</button>     
     </div>
   </div>
 
