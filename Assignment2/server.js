@@ -9,7 +9,7 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"))
 code = fs.readFileSync('contract.sol').toString()
 compiledCode = solc.compile(code)
 
-console.log({"yo2" : web3.eth.accounts[0]})
+console.log({"yo2" : web3.eth.accounts})
 
 abi = JSON.parse(compiledCode.contracts[':MainContract'].interface)
 MainContract = web3.eth.contract(abi)
@@ -82,20 +82,22 @@ app.get('/get_all_media', function(req, res){
 
 // buy_media
 app.get('/buy_media', function(req, res){
+  console.log(req.query)
   all_media = contractInstance.buy_media(
-    req.query.address, // TODO parse to addr
+    req.query.creator, // TODO parse to addr
     parseInt(req.query.media_id),
-    req.query.is_individual,
-    {from : req.query.address}
+    (req.query.is_individual == 'true'),
+    {from : req.query.address, value: parseInt(req.query.cost), gas: 470000}
   )
   res.send(all_media)
 })
 
 // publish_url
 app.get('/publish_url', function(req, res){
+  console.log("Publish URL called, ", req.query)
   contractInstance.publish_url(
     parseInt(req.query.media_id),
-    req.query.consumer_id,
+    req.query.consumer,
     req.query.url,
     {from : req.query.address}
   )

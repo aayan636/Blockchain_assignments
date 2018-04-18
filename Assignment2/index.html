@@ -21,22 +21,54 @@
     var deployedContract;
     var number_of_shares = 0;
     var self_addr = "";
-    var buyMedia = function (_creator, _media_id) {
-          console.log("buymedia" + creator + "," + media_id)
+    var buyMedia = function (_creator, _media_id, _cost) {
+      console.log("buymedia " + _creator + "," + _media_id, _cost)
+      $.ajax({
+        type:'GET',
+        data: {creator:_creator, media_id:_media_id, is_individual:individual, cost:_cost, address:self_addr},
+        url: server_url + '/buy_media',
+        success: function(data) {
+          console.log("Success buy_media")
+          console.log(data)
+        },
+        error: function(data) {
+          console.log("Failure buy_media")
+          console.log(data)
+        }
+      })
+    }
+
+    var add_creator_listener = function () {
+      deployedContract.received_payment((err, res) => {
+        if (res.args.creator == self_addr) {
+          console.log("YO RECEIVED PAYMENT", err, res)
+          var _media_id = parseInt(res.args.media_id)
+          var _url = prompt("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ")
+          console.log(_url)
           $.ajax({
             type:'GET',
-            data: {creator:_creator, media_id:_media_id, is_individual:individual},
-            url: server_url + '/buy_media',
+            data: {media_id:_media_id, consumer:res.args.consumer,url:_url, address: self_addr},
+            url: server_url+'/publish_url',
             success: function(data) {
-              console.log("Success buy_media")
-              console.log(data)
+              console.log("URL published!", data)
             },
-            failure: function(data) {
-              console.log("Failure buy_media")
-              console.log(data)
+            error: function(data) {
+              console.log("URL not published!", data)
             }
           })
+        }
+      })
     }
+
+    var add_consumer_listener = function () {
+      deployedContract.received_media((err, res) => {
+        if (res.args.consumer == self_addr) {
+          console.log("YO RECEIVED MEDIA", err, res);
+          prompt("The URL for the media_id " + res.args.media_id + ", by creator " + res.args.creator + " is now available.");          
+        }
+      })
+    }
+
     $(document).ready(function() {
       web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
       // if creator listen to payment else to media
@@ -72,6 +104,16 @@
           // console.log(address_entered, "xyz", self_addr)
           $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
           $('#LoginDiv').hide();
+          if (is_creator)
+          {
+            $('#ConsumerDiv').hide();
+            add_creator_listener();
+          }
+          else
+          {
+            $('#CreatorDiv').hide();
+            add_consumer_listener();
+          }
           // add event watch TODO
           },
         error: function() {
@@ -101,7 +143,7 @@
         
         $.ajax({
           type: 'GET',
-          data: {is_individual:individual},
+          data: {is_individual:individual, address: self_addr},
           url: server_url+'/get_all_media',
           success: function(data) {
             console.log("get_all_media success")
@@ -120,9 +162,10 @@
 
             for(var i = 0; i < data[0].length; i++) {
               var creator = data[0][i]
+              creator = creator.toString()
               var media_id = data[1][i]
               var cost = data[2][i] + " Wei"
-              var button = '<button id="B'+creator+':'+media_id+' onClick=buyMedia('+creator+','+media_id+')" > Buy this </button> <br/>'
+              var button = '<button id="B'+creator+':'+media_id+'" onClick=\'buyMedia(\"'+creator+'\",'+media_id+','+data[2][i]+')\' > Buy this </button> <br/>'
               var display = "" + creator + " || " + media_id + " || " + cost + " || " + button
               $("#list_medias").append(display) 
             }
@@ -149,12 +192,14 @@
             url: server_url+'/add_media',
             success: function(data) {
               console.log('add_media success');
+              $("#add_stakeholders").show();
+              $('#ind_cost').val("");
+              $('#com_cost').val("");
               for(var i = 0; i < number_of_shares; i++) {
                 $('#stk' + i).remove()
                 $('#shr' + i).remove()
-                number_of_shares = 0
-                $("#add_stakeholders").show();
               }
+              number_of_shares = 0
             },
             error: function(data) {
               console.log('add_media error');
@@ -180,6 +225,8 @@
       <input id="user_address" type="text">
       <button id="check_address">Click to Proceed</button>
   </div>
+  
+  <p id="is_creator"></p>
 
   <div id="ConsumerDiv" align="left">
     <button id="become_creator">Become A Media Creator</button>
@@ -189,7 +236,6 @@
   </div>
 
   <div id="CreatorDiv" align="right">
-    <p id="is_creator"></p>
     <div id="add_media"> 
       <button id="add_media_button">Add the Media: </button><br/>
       <input id="ind_cost" type="text" placeholder="Individual Cost">
