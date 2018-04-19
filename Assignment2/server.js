@@ -9,25 +9,28 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"))
 code = fs.readFileSync('contract.sol').toString()
 compiledCode = solc.compile(code)
 
-console.log({"yo2" : web3.eth.accounts[0]})
+abi_main_contract = JSON.parse(compiledCode.contracts[':MainContract'].interface)
+MainContract = web3.eth.contract(abi_main_contract)
+bytecode_main_contract = compiledCode.contracts[':MainContract'].bytecode
 
-abi = JSON.parse(compiledCode.contracts[':MainContract'].interface)
-MainContract = web3.eth.contract(abi)
-byteCode = compiledCode.contracts[':MainContract'].bytecode
+abi_creator = JSON.parse(compiledCode.contracts[':Creator'].interface)
+Creator = web3.eth.contract(abi_creator)
+bytecode_creator = compiledCode.contracts[':Creator'].bytecode
 
-deployedContract = MainContract.new({data: byteCode, from: web3.eth.accounts[0], gas: 4700000},
+deployedContract = MainContract.new({data: bytecode_main_contract, from: web3.eth.accounts[0], gas: 4700000},
   (err, contract) => {
+    console.log("ERROR?? ", err, contract)
     if (contract.address != undefined){
       contractInstance = MainContract.at(deployedContract.address)
     
-      contractInstance.received_payment((err, res) => {
-        console.log("YO RECEIVED PAYMENT", err, res);
-        // contractInstance.publish_url(res.args.media_id, res.args.consumer, "RANDOM URL", {data: byteCode, from: res.args.creator, gas: 4700000})
-      })
+      // contractInstance.received_payment((err, res) => {
+      //   console.log("YO RECEIVED PAYMENT", err, res);
+      //   // contractInstance.publish_url(res.args.media_id, res.args.consumer, "RANDOM URL", {data: byteCode, from: res.args.creator, gas: 4700000})
+      // })
 
-      contractInstance.received_media((err, res) => {
-        console.log("YO RECEIVED MEDIA", err, res);
-      })
+      // contractInstance.received_media((err, res) => {
+      //   console.log("YO RECEIVED MEDIA", err, res);
+      // })
     }
   }
 )
