@@ -19,6 +19,9 @@
     var abi, contract_addr;
     var mainContract;
     var deployedContract;
+    var creator_contract_addr;
+    var creator_abi;
+    var creator_contract_instance;
     var number_of_shares = 0;
     var self_addr = "";
     var buyMedia = function (_creator, _media_id, _cost) {
@@ -39,41 +42,40 @@
     }
 
     var getURL = function(_creator, _media_id) {
-      console.log("getURL called wih " + creator + media_id)
+      console.log("getURL called wih " + _creator + _media_id)
       $.ajax({
         type: 'GET',
         data: {creator: _creator, media_id: _media_id},
-        url: server_url + '/get_media'
-        success : function(data) {
-          console.log("getURL success")
-          console.log(data)
-        } 
+        url: server_url + '/get_media',
+        success: function(data) {
+          console.log("getURL success");
+          console.log(data);
+        },
         error: function(data) {
-          console.log("getURL failed")
-          console.log(data)
+          console.log("getURL failed");
+          console.log(data);
         }
       })
     }
 
     var add_creator_listener = function () {
-      deployedContract.received_payment((err, res) => {
-        if (res.args.creator == self_addr) {
-          console.log("YO RECEIVED PAYMENT", err, res)
-          var _media_id = parseInt(res.args.media_id)
-          var _url = prompt("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ")
-          console.log(_url)
-          $.ajax({
-            type:'GET',
-            data: {media_id:_media_id, consumer:res.args.consumer,url:_url, address: self_addr},
-            url: server_url+'/publish_url',
-            success: function(data) {
-              console.log("URL published!", data)
-            },
-            error: function(data) {
-              console.log("URL not published!", data)
-            }
-          })
-        }
+      
+      creator_contract_instance.received_payment((err, res) => {
+        console.log("YO RECEIVED PAYMENT", err, res)
+        var _media_id = parseInt(res.args.media_id)
+        var _url = prompt("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ")
+        console.log(_url)
+        $.ajax({
+          type:'GET',
+          data: {media_id:_media_id, consumer:res.args.consumer,url:_url, address: self_addr, creator_contract_address: creator_contract_addr},
+          url: server_url+'/publish_url',
+          success: function(data) {
+            console.log("URL published!", data)
+          },
+          error: function(data) {
+            console.log("URL not published!", data)
+          }
+        })
       })
     }
 
@@ -82,7 +84,7 @@
           if (res.args.consumer == self_addr) {
             console.log("YO RECEIVED MEDIA", err, res);
             prompt("The URL for the media_id " + res.args.media_id + ", by creator " + res.args.creator + " is now available."); 
-            $("#" + res.args.creator + ":" + res.args.media_id).replaceWith('<button id="B'+creator+':'+media_id+'" onClick=\'getURL(\"'+creator+'\",'+media_id+')\' > Get URL </button> <br/>');     
+            $("#" + res.args.creator + ":" + res.args.media_id).replaceWith('<button id="B'+res.args.creator+':'+res.args.media_id+'" onClick=\'getURL(\"'+res.args.creator+'\",'+res.args.media_id+')\' > Get URL </button> <br/>');     
           }
       })
     }
@@ -115,34 +117,38 @@
         var address_entered = $('#user_address').val();
         console.log("Check address clicked", address_entered);
         self_addr = address_entered;
-        $.ajax({
-          type: 'GET',
-          data: {address:address_entered},
-          url: server_url+'/is_creator',
-          success: function(data) {
-          console.log("verified address is_creator = " +  data);
-          is_creator = data
-          // console.log(address_entered, "xyz", self_addr)
-          $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
-          $('#LoginDiv').hide();
-          if (is_creator)
-          {
-            $('#CreatorDiv').show();
-            //$('#ConsumerDiv').hide();
-            add_creator_listener();
-          }
-          else
-          {
-            $('#ConsumerDiv').show();
-            //$('#CreatorDiv').hide();
-            add_consumer_listener();
-          }
-          // add event watch TODO
-          },
-        error: function() {
-          console.log("Error");
-          }
-        })
+        is_creator = false;
+        $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
+        $('#LoginDiv').hide();
+        $('#ConsumerDiv').show();
+        add_consumer_listener();
+        // $.ajax({
+        //   type: 'GET',
+        //   data: {address:address_entered},
+        //   url: server_url+'/is_creator',
+        //   success: function(data) {
+        //   console.log("verified address is_creator = " +  data);
+        //   is_creator = data
+        //   // console.log(address_entered, "xyz", self_addr)
+        //   $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
+        //   $('#LoginDiv').hide();
+        //   if (is_creator)
+        //   {
+        //     $('#CreatorDiv').show();
+        //     //$('#ConsumerDiv').hide();
+        //     add_creator_listener();
+        //   }
+        //   else
+        //   {
+        //     $('#ConsumerDiv').show();
+        //     //$('#CreatorDiv').hide();
+        //     add_consumer_listener();
+        //   }
+        //   },
+        // error: function() {
+        //   console.log("Error");
+        //   }
+        // })
       });
 
       $('#become_creator').click(function(e){
@@ -152,12 +158,21 @@
           data: {address: self_addr},
           url: server_url + '/make_creator',
           success: function(data) {
-            console.log("Current window became creator")
-            $('#CreatorDiv').show();
-            $('#ConsumerDiv').hide();
-            is_creator = true;
-            $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
-            add_creator_listener();
+            console.log(data);
+            if (data.success)
+            {
+              console.log("Current window became creator")
+
+              $('#CreatorDiv').show();
+              $('#ConsumerDiv').hide();
+              is_creator = true;
+              $('#is_creator').html(is_creator?"You are a creator":"You are a consumer");
+              creator_contract_addr = data.creator_contract_addr;
+              creator_abi = data.creator_abi;
+              var creatorContract = web3.eth.contract(creator_abi);
+              creator_contract_instance = creatorContract.at(creator_contract_addr);
+              add_creator_listener();              
+            }
           },
           error: function(data) {
             console.log("Current window FAILED to become creator")
@@ -189,14 +204,14 @@
               $("#list_medias").append(display) 
 
               for(var i = 0; i < data[0].length; i++) {
-                var creator = data[0][i]
+                var creator = data[0][i];
 
                 for(var j = 0; j < data[1][i]; j++) {
-                  var media_id = data[2][i][j]
-                  var cost = data[2][i][j]
+                  var media_id = data[2][10*i+j]
+                  var cost = data[3][10*i+j]
                   var bought = (cost == 0)
-                  var button =  (data[3][i] == false)?('<button id="B'+creator+':'+media_id+'" onClick=\'buyMedia(\"'+creator+'\",'+media_id+','+data[2][i]+')\' > Buy this </button> <br/>'):('<button id="B'+creator+':'+media_id+'" onClick=\'getURL(\"'+creator+'\",'+media_id+')\' > Get URL </button> <br/>')
-                  var display = "" + creator + " || " + media_id + " || " + cost + " || " + button
+                  var button =  (!bought)?('<button id="B'+creator+':'+media_id+'" onClick=\'buyMedia(\"'+creator+'\",'+media_id+','+cost+')\' > Buy this </button> <br/>'):('<button id="B'+creator+':'+media_id+'" onClick=\'getURL(\"'+creator+'\",'+media_id+')\' > Get URL </button> <br/>')
+                  var display = "" + creator + " || " + media_id + " || " + cost + " Wei || " + button
                   $("#list_medias").append(display) 
                 }
               }
@@ -230,7 +245,7 @@
 
           $.ajax({
             type: 'GET',
-            data: {cost_individual: ind_cost, cost_company: com_cost, stake_addr: stake_addr, stake: stake_val, address: self_addr},
+            data: {cost_individual: ind_cost, cost_company: com_cost, stake_addr: stake_addr, stake: stake_val, address: self_addr, creator_contract_address: creator_contract_addr},
             url: server_url+'/add_media',
             success: function(data) {
               console.log('add_media success');

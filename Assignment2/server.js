@@ -59,11 +59,11 @@ app.get('/get_abi_addr', function(req, res){
 //   res.send(is_creator)
 // });
 
-// make_creator
-app.get('/make_creator', function(req, res){
-  contractInstance.make_creator({from : req.query.address})
-  res.send("done")
-})
+// // make_creator
+// app.get('/make_creator', function(req, res){
+//   contractInstance.make_creator({from : req.query.address})
+//   res.send("done")
+// })
 
 // multi contract make creator
 app.get('/make_creator', function(req, res){
@@ -73,12 +73,11 @@ app.get('/make_creator', function(req, res){
           {
             console.log("New creator made. Address : ", creator.address)
             contractInstance.add_creator(creator.address, {from: web3.eth.accounts[1], gas: 4700000})
-            resp = {success: true, creator_contract_addr: creator.address, creator_abi: abi_creator}
-            res.send(resp)
+            // resp = {success: true, creator_contract_addr: creator.address, creator_abi: abi_creator}
+            res.send({success: true, creator_contract_addr: creator.address, creator_abi: abi_creator})
           }
         }
       )
-  res.send({success: false})
 })
 
 // add_media
@@ -104,15 +103,16 @@ app.get('/add_media', function(req, res){
   var new_stakes = []
   for (var i = 0; i < req.query.stake.length; i++)
     new_stakes.push(parseInt(req.query.stake[i]))
-  console.log(web3.toWei(parseInt(req.query.cost_individual), 'ether'), new_stakes)
-  creatorInstance = Creator.at(req.query.creator_contract_addr)
+  console.log(web3.toWei(parseInt(req.query.cost_individual), 'ether'), new_stakes, req.query.creator_contract_address)
+  creatorInstance = Creator.at(req.query.creator_contract_address)
   creatorInstance.add_media(
     web3.toWei(parseInt(req.query.cost_individual), 'ether'), 
     web3.toWei(parseInt(req.query.cost_company), 'ether'),
     req.query.stake_addr,
     new_stakes,
-    {data: byteCode, from: req.query.address, gas: 4700000}
+    {from: req.query.address, gas: 4700000}
   )
+  res.send("done")
 })
 
 // get_all_media
@@ -129,7 +129,7 @@ app.get('/get_all_media', function(req, res){
 app.get('/buy_media', function(req, res){
   console.log(req.query)
   all_media = contractInstance.buy_media(
-    req.query.creator, // TODO parse to addr
+    req.query.creator,
     parseInt(req.query.media_id),
     (req.query.is_individual == 'true'),
     {from : req.query.address, value: parseInt(req.query.cost), gas: 470000}
@@ -140,7 +140,7 @@ app.get('/buy_media', function(req, res){
 // publish_url
 app.get('/publish_url', function(req, res){
   console.log("Publish URL called, ", req.query)
-  creatorInstance = Creator.at(req.query.creator_contract_addr)
+  creatorInstance = Creator.at(req.query.creator_contract_address)
   creatorInstance.publish_url(
     req.query.consumer,
     parseInt(req.query.media_id),
