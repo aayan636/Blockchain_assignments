@@ -53,10 +53,11 @@
       console.log("getURL called wih " + _creator + _media_id)
       $.ajax({
         type: 'GET',
-        data: {creator: _creator, media_id: _media_id},
+        data: {creator: _creator, media_id: _media_id, address:self_addr},
         url: server_url + '/get_media',
         success: function(data) {
           console.log("getURL success");
+          $("#url_box").val(web3.toAscii(data))
           console.log(data);
         },
         error: function(data) {
