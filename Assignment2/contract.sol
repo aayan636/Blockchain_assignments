@@ -141,8 +141,10 @@ contract MainContract {
       uint[10] memory cost;
       (size, media_id, cost) = creator_map[creator_addr[i]].get_all_media(is_individual);
       sizes[i] = size;
-      media_id_array[i] = media_id;
-      cost_array[i] = cost;
+      for(uint j=0; j<size; ++j){
+        media_id_array[j][i] = media_id[j];
+        cost_array[j][i] = cost[j];
+      }
     }
     return (creator_addr, sizes, media_id_array, cost_array);
   }
