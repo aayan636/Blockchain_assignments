@@ -9,6 +9,7 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>Buy & Sell Media</title>
   <!-- <script type="text/javascript" src="script.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
   <script src="./node_modules/web3/dist/web3.min.js"></script>
   <script type="text/javascript" src="./jsreferences/jquery-1.11.1.min.js"></script>
   <script type="text/javascript">
@@ -24,6 +25,13 @@
     var creator_contract_instance;
     var number_of_shares = 0;
     var self_addr = "";
+    let crypto;
+    try {
+      crypto = require('crypto');
+    } catch (err) {
+      console.log('crypto support is disabled!');
+    }
+
     var buyMedia = function (_creator, _media_id, _cost) {
       console.log("buymedia " + _creator + "," + _media_id, _cost)
       $.ajax({
@@ -58,12 +66,14 @@
       })
     }
 
-    var add_creator_listener = function () {
-      
-      creator_contract_instance.received_payment((err, res) => {
-        console.log("YO RECEIVED PAYMENT", err, res)
-        var _media_id = parseInt(res.args.media_id)
-        var _url = prompt("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ")
+    var add_creator_listener_sub = function(_media_id, res) {
+        var _url = $("#url_box").val();
+        $("#url_box").val('')
+        //var buffer = new Buffer(_url);
+        //var encrypted = crypto.publicEncrypt(res.args.consumer, buffer);
+        //var encString = encrypted.toString("base64");
+        var encString = CryptoJS.AES.encrypt(_url, res.args.consumer)
+        console.log(encString)
         console.log(_url)
         $.ajax({
           type:'GET',
@@ -75,7 +85,19 @@
           error: function(data) {
             console.log("URL not published!", data)
           }
+        })  
+    }
+
+    var add_creator_listener = function () {     
+      creator_contract_instance.received_payment((err, res) => {
+        console.log("YO RECEIVED PAYMENT", err, res)
+        var _media_id = parseInt(res.args.media_id)
+        //var _url = prompt("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ")
+        $("#MessageDiv").html("Consumer " + res.args.consumer + " just bought your media id " + res.args.media_id + ". Please enter the URL of this media : ");
+        $("#url_button").one("click", function() {
+          add_creator_listener_sub(_media_id, res)
         })
+        
       })
     }
 
@@ -83,8 +105,11 @@
       deployedContract.received_media((err, res) => {
           if (res.args.consumer == self_addr) {
             console.log("YO RECEIVED MEDIA", err, res);
-            prompt("The URL for the media_id " + res.args.media_id + ", by creator " + res.args.creator + " is now available."); 
-            $("#" + res.args.creator + ":" + res.args.media_id).replaceWith('<button id="B'+res.args.creator+':'+res.args.media_id+'" onClick=\'getURL(\"'+res.args.creator+'\",'+res.args.media_id+')\' > Get URL </button> <br/>');     
+            //prompt("The URL for the media_id " + res.args.media_id + ", by creator " + res.args.creator + " is now available."); 
+            $("#MessageDiv").html("The URL for the media_id " + res.args.media_id + ", by creator " + res.args.creator + " is now available.")
+            //$("#B" + res.args.creator + ":" + res.args.media_id).replaceWith('<button id="B'+res.args.creator+':'+res.args.media_id+'" onClick=\'getURL(\"'+res.args.creator+'\",'+res.args.media_id+')\' > Get URL </button> <br/>');     
+            //$("#B" + res.args.creator + ":" + res.args.media_id).html(" Get URL ")
+            console.log("#B" + res.args.creator + ":" + res.args.media_id)
           }
       })
     }
@@ -299,6 +324,12 @@
       <input id="com_cost" type="text" placeholder="Company Cost">
       <button id="add_stakeholders">Add Stakeholders</button>     
     </div>
+  </div>
+
+  <div id="UrlDiv" align="right">
+    <input id="url_box" type="text" placeholder="URL"><br/>
+    <button id="url_button">Submit </button><br/>
+    <p id="MessageDiv"/>
   </div>
 
 </body>

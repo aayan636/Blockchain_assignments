@@ -145,7 +145,7 @@ app.get('/publish_url', function(req, res){
     req.query.consumer,
     parseInt(req.query.media_id),
     req.query.url,
-    {from : req.query.address}
+    {from : req.query.address, gas: 470000}
   )
   res.send("done")
 })
