@@ -24,11 +24,21 @@ deployedContract = MainContract.new({data: bytecode_main_contract, from: web3.et
     console.log("ERROR?? ", err, contract)
     if (contract.address != undefined){
       contractInstance = MainContract.at(deployedContract.address)
-      contractInstance.make_creator({from: web3.eth.accounts[0], gas: 470000})
-      contractInstance.received_payment((err, res) => {
-        console.log("YO RECEIVED PAYMENT", err, res);
-        // contractInstance.publish_url(res.args.media_id, res.args.consumer, "RANDOM URL", {data: byteCode, from: res.args.creator, gas: 4700000})
-      })
+      // contractInstance.make_creator({from: web3.eth.accounts[0], gas: 470000})
+      // make new creator : 
+      new_creator = Creator.new(contract.address, {data: bytecode_creator, from: web3.eth.accounts[0], gas: 4700000},
+        (err, creator) => {
+          if (creator.address != undefined) {
+            console.log("Creator1 address : ", creator.address)
+            creator1 = Creator.at(creator.address)
+            // creator1.received_payment((err, res) => {
+            //   console.log("YO RECEIVED PAYMENT", err, res);
+            //   creator1.publish_url(web3.eth.accounts[9], 0, "LOL_URL", {from: web3.eth.accounts[1], gas: 4700000});
+            // })
+
+          }
+        }
+      )
     }
   }
 )
@@ -36,17 +46,18 @@ deployedContract = MainContract.new({data: bytecode_main_contract, from: web3.et
 // get_abi_addr
 app.get('/get_abi_addr', function(req, res){
   result = {};
-  result["abi"] = abi;
+  result["abi"] = abi_main_contract;
   result["addr"] = deployedContract.address;
   res.send(result)
 });
 
+
 // is_creator
-app.get('/is_creator', function(req, res){
-  console.log(req.query)
-  is_creator = contractInstance.is_creator({from: req.query.address, gas: 470000})
-  res.send(is_creator)
-});
+// app.get('/is_creator', function(req, res){
+//   console.log(req.query)
+//   is_creator = contractInstance.is_creator({from: req.query.address, gas: 470000})
+//   res.send(is_creator)
+// });
 
 // make_creator
 app.get('/make_creator', function(req, res){
@@ -54,21 +65,54 @@ app.get('/make_creator', function(req, res){
   res.send("done")
 })
 
+// multi contract make creator
+app.get('/make_creator', function(req, res){
+  c1 = Creator.new(deployedContract.address, {data: bytecode_creator, from: req.query.address, gas: 4700000},
+        (err, creator) => {
+          if (creator.address != undefined)
+          {
+            console.log("New creator made. Address : ", creator.address)
+            contractInstance.add_creator(creator.address, {from: web3.eth.accounts[1], gas: 4700000})
+            resp = {success: true, creator_contract_addr: creator.address, creator_abi: abi_creator}
+            res.send(resp)
+          }
+        }
+      )
+  res.send({success: false})
+})
+
 // add_media
+// app.get('/add_media', function(req, res){
+//   console.log(req.query)
+//   var new_stakes = []
+//   for (var i = 0; i < req.query.stake.length; i++)
+//     new_stakes.push(parseInt(req.query.stake[i]))
+//   console.log(web3.toWei(parseInt(req.query.cost_individual), 'ether'), new_stakes)
+//   contractInstance.add_media(
+//     web3.toWei(parseInt(req.query.cost_individual), 'ether'), 
+//     web3.toWei(parseInt(req.query.cost_company), 'ether'),
+//     req.query.stake_addr,
+//     new_stakes,
+//     {data: byteCode, from: req.query.address, gas: 4700000}
+//   )
+//   res.send("done")
+// })
+
+// multi contract add media
 app.get('/add_media', function(req, res){
   console.log(req.query)
   var new_stakes = []
   for (var i = 0; i < req.query.stake.length; i++)
     new_stakes.push(parseInt(req.query.stake[i]))
   console.log(web3.toWei(parseInt(req.query.cost_individual), 'ether'), new_stakes)
-  contractInstance.add_media(
+  creatorInstance = Creator.at(req.query.creator_contract_addr)
+  creatorInstance.add_media(
     web3.toWei(parseInt(req.query.cost_individual), 'ether'), 
     web3.toWei(parseInt(req.query.cost_company), 'ether'),
     req.query.stake_addr,
     new_stakes,
     {data: byteCode, from: req.query.address, gas: 4700000}
   )
-  res.send("done")
 })
 
 // get_all_media
@@ -96,9 +140,10 @@ app.get('/buy_media', function(req, res){
 // publish_url
 app.get('/publish_url', function(req, res){
   console.log("Publish URL called, ", req.query)
-  contractInstance.publish_url(
-    parseInt(req.query.media_id),
+  creatorInstance = Creator.at(req.query.creator_contract_addr)
+  creatorInstance.publish_url(
     req.query.consumer,
+    parseInt(req.query.media_id),
     req.query.url,
     {from : req.query.address}
   )
