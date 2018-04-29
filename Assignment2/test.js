@@ -37,15 +37,21 @@ mc = MainContract.new({data: bytecode_main_contract, from: web3.eth.accounts[0],
               console.log("YO RECEIVED PAYMENT", err, res);
               creator1.publish_url(web3.eth.accounts[9], 0, "LOL_URL", {from: web3.eth.accounts[1], gas: 4700000});
             })
-
-            console.log("Before adding media", creator1.get_all_media(true, {from: web3.eth.accounts[9]}))
-            console.log(creator1.add_media(web3.toWei(5, 'ether'), web3.toWei(4, 'ether'), [web3.eth.accounts[6], web3.eth.accounts[5]], [5, 3], {from: web3.eth.accounts[1], gas: 4700000}))
             main_contract.add_creator(creator.address, {from: web3.eth.accounts[1], gas: 4700000})
             console.log("Done making creator")
 
-            console.log("Before adding media", creator1.get_all_media(true, {from: web3.eth.accounts[9]})[2][0])
+            res = main_contract.get_all_media(true, {from: web3.eth.accounts[9]})
+            console.log("Before adding media", res[0], res[1], res[2], res[3])
+            
+            console.log(creator1.add_media(web3.toWei(1, 'ether'), web3.toWei(4, 'ether'), [web3.eth.accounts[6], web3.eth.accounts[5]], [5, 3], {from: web3.eth.accounts[1], gas: 4700000}))
+            console.log(creator1.add_media(web3.toWei(2, 'ether'), web3.toWei(5, 'ether'), [web3.eth.accounts[6], web3.eth.accounts[5]], [5, 3], {from: web3.eth.accounts[1], gas: 4700000}))
+            console.log(creator1.add_media(web3.toWei(3, 'ether'), web3.toWei(6, 'ether'), [web3.eth.accounts[6], web3.eth.accounts[5]], [5, 3], {from: web3.eth.accounts[1], gas: 4700000}))
+
+
+            res = main_contract.get_all_media(true, {from: web3.eth.accounts[9]})
+            console.log("After adding media", res[0], res[1], res[2], res[3])
           
-            console.log("Payment", main_contract.buy_media(creator.address, 0, true, {from: web3.eth.accounts[9], value: web3.toWei(5, 'ether'), gas: 4700000}))
+            // console.log("Payment", main_contract.buy_media(creator.address, 0, true, {from: web3.eth.accounts[9], value: web3.toWei(5, 'ether'), gas: 4700000}))
 
           }
         }

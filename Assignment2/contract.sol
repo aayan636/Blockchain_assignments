@@ -38,7 +38,7 @@ contract Creator {
     require(stake_addr.length > 0);
     require(cost_individual > 0);
     require(cost_company > 0);
-    require(media_array.length <= 10);
+    require(media_array.length <= 4);
     
     uint media_id = media_array.length;
     media_array.push(Media(media_id, cost_individual, cost_company, stake_addr.length));
@@ -51,11 +51,11 @@ contract Creator {
   }
 
   // Get all media for consumer
-  // Limited to 10 media per creator
+  // Limited to 4 media per creator
   // Returns (size, media_id, cost)
-  function get_all_media(bool is_individual) view public returns (uint, uint[10], uint[10]) {
-    uint[10] memory media_ids;
-    uint[10] memory costs;
+  function get_all_media(bool is_individual) view public returns (uint, uint[4], uint[4]) {
+    uint[4] memory media_ids;
+    uint[4] memory costs;
 
     for(uint i=0; i<media_array.length; ++i){
       media_ids[i] = media_array[i].uid;
@@ -130,25 +130,6 @@ contract MainContract {
     creator_addr.push(c_addr);
   }
 
-  // Get all media for consumer
-  // function get_all_media(bool is_individual) view public returns (address[], uint[], uint[10][], uint[10][]) {
-  //   uint[] memory sizes = new uint[](creator_addr.length);
-  //   uint[10][] memory media_id_array = new uint[10][](creator_addr.length);
-  //   uint[10][] memory cost_array = new uint[10][](creator_addr.length);
-
-  //   for(uint i=0; i<creator_addr.length; ++i){
-  //     uint size;
-  //     uint[10] memory media_id;
-  //     uint[10] memory cost;
-  //     (size, media_id, cost) = creator_map[creator_addr[i]].get_all_media(is_individual);
-  //     sizes[i] = size;
-  //     for(uint j=0; j<size; ++j){
-  //       media_id_array[j][i] = media_id[j];
-  //       cost_array[j][i] = cost[j];
-  //     }
-  //   }
-  //   return (creator_addr, sizes, media_id_array, cost_array);
-  // }
   function get_all_media(bool is_individual) view public returns (address[], uint[], uint[], uint[]) {
     uint[] memory sizes = new uint[](creator_addr.length);
     uint[] memory media_id_array = new uint[](10 * creator_addr.length);
@@ -156,8 +137,8 @@ contract MainContract {
 
     for(uint i=0; i<creator_addr.length; ++i){
       uint size;
-      uint[10] memory media_id;
-      uint[10] memory cost;
+      uint[4] memory media_id;
+      uint[4] memory cost;
       (size, media_id, cost) = creator_map[creator_addr[i]].get_all_media(is_individual);
       sizes[i] = size;
       for(uint j=0; j<size; ++j){
